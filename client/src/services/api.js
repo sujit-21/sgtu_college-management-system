@@ -11,7 +11,8 @@ const api = axios.create({
 // Request interceptor to attach Bearer token if stored in localStorage
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('apex_token');
+    const token =
+      localStorage.getItem('sgtu_token') || localStorage.getItem('apex_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -25,11 +26,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // If unauthorized and not already on login page
-      if (!window.location.pathname.includes('/login')) {
-        localStorage.removeItem('apex_token');
-        localStorage.removeItem('apex_user');
-      }
+      // If unauthorized, clean stored session
+      localStorage.removeItem('sgtu_token');
+      localStorage.removeItem('sgtu_user');
+      localStorage.removeItem('apex_token');
+      localStorage.removeItem('apex_user');
     }
     return Promise.reject(error);
   }

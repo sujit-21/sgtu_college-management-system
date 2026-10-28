@@ -7,20 +7,31 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const clearStoredAuth = () => {
+    localStorage.removeItem('sgtu_token');
+    localStorage.removeItem('sgtu_user');
+    localStorage.removeItem('apex_token');
+    localStorage.removeItem('apex_user');
+  };
+
   // Check existing session on mount
   useEffect(() => {
     const initAuth = async () => {
-      const storedToken = localStorage.getItem('apex_token');
+      const storedToken =
+        localStorage.getItem('sgtu_token') || localStorage.getItem('apex_token');
+
       if (storedToken) {
         try {
           const res = await api.get('/auth/me');
           if (res.data.success) {
             setUser(res.data.user);
+          } else {
+            clearStoredAuth();
+            setUser(null);
           }
         } catch (error) {
-          console.error('Session check failed:', error);
-          localStorage.removeItem('apex_token');
-          localStorage.removeItem('apex_user');
+          // Token is expired, invalid, or belongs to a previous database seed
+          clearStoredAuth();
           setUser(null);
         }
       }
@@ -33,6 +44,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (identifier, password) => {
     const res = await api.post('/auth/login', { identifier, password });
     if (res.data.success) {
+      localStorage.setItem('sgtu_token', res.data.token);
+      localStorage.setItem('sgtu_user', JSON.stringify(res.data.user));
+      // Support legacy keys
       localStorage.setItem('apex_token', res.data.token);
       localStorage.setItem('apex_user', JSON.stringify(res.data.user));
       setUser(res.data.user);
@@ -45,10 +59,9 @@ export const AuthProvider = ({ children }) => {
     try {
       await api.post('/auth/logout');
     } catch (e) {
-      // ignore
+      // quiet logout
     } finally {
-      localStorage.removeItem('apex_token');
-      localStorage.removeItem('apex_user');
+      clearStoredAuth();
       setUser(null);
     }
   };
