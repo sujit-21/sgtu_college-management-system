@@ -11,6 +11,7 @@ import {
   Award,
   CreditCard,
   Bell,
+  BookOpen,
   ChevronLeft,
   ChevronRight,
   LogOut,
@@ -34,6 +35,7 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
         { name: 'Assignments', path: '/assignments', icon: FileSpreadsheet },
         { name: 'Exams & Results', path: '/examinations', icon: Award },
         { name: 'Fees & Invoices', path: '/fees', icon: CreditCard },
+        { name: 'Library & Books', path: '/library', icon: BookOpen },
         { name: 'Announcements', path: '/announcements', icon: Bell },
       ];
     }
@@ -44,6 +46,7 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
         { name: 'Mark Attendance', path: '/attendance', icon: CalendarCheck },
         { name: 'Assignments & Grading', path: '/assignments', icon: FileSpreadsheet },
         { name: 'Marks & Results', path: '/examinations', icon: Award },
+        { name: 'Library & Books', path: '/library', icon: BookOpen },
         { name: 'Announcements', path: '/announcements', icon: Bell },
       ];
     }
@@ -53,6 +56,7 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
         { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
         { name: 'Fees & Invoices', path: '/fees', icon: CreditCard },
         { name: 'Students', path: '/admin/students', icon: Users },
+        { name: 'Library & Books', path: '/library', icon: BookOpen },
         { name: 'Announcements', path: '/announcements', icon: Bell },
       ];
     }
@@ -65,6 +69,7 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
       { name: 'Coursework & Submissions', path: '/assignments', icon: FileSpreadsheet },
       { name: 'Exams & Grades', path: '/examinations', icon: Award },
       { name: 'Fee Invoices & Receipts', path: '/fees', icon: CreditCard },
+      { name: 'Library & Books', path: '/library', icon: BookOpen },
       { name: 'Announcements', path: '/announcements', icon: Bell },
     ];
   };

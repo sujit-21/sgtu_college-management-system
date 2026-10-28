@@ -20,6 +20,8 @@ import {
   Announcement,
   Notification,
   AuditLog,
+  Book,
+  BookIssue,
 } from './models/index.js';
 
 dotenv.config();
@@ -32,6 +34,8 @@ async function seed() {
 
   // Clear existing collections
   await Promise.all([
+    BookIssue.deleteMany({}),
+    Book.deleteMany({}),
     AuditLog.deleteMany({}),
     Notification.deleteMany({}),
     Announcement.deleteMany({}),
@@ -607,7 +611,176 @@ async function seed() {
     authorName: 'Academic Council',
   });
 
-  // 12. Audit Logs
+  // 12. Library Books and Circulations
+  const book1 = await Book.create({
+    title: 'Introduction to Algorithms (4th Edition)',
+    isbn: '978-0262046305',
+    author: 'Thomas H. Cormen, Charles E. Leiserson, Ronald L. Rivest, Clifford Stein',
+    category: 'Computer Science',
+    publisher: 'MIT Press',
+    edition: '4th Edition',
+    totalCopies: 6,
+    availableCopies: 4,
+    shelfLocation: 'Stack A, Rack 102',
+    description: 'The leading textbook in algorithms worldwide, thoroughly updated with new chapters on bipartite graphs, online algorithms, and machine learning.',
+    status: 'AVAILABLE',
+  });
+
+  const book2 = await Book.create({
+    title: 'Artificial Intelligence: A Modern Approach (4th Edition)',
+    isbn: '978-0134610993',
+    author: 'Stuart Russell, Peter Norvig',
+    category: 'Artificial Intelligence',
+    publisher: 'Pearson',
+    edition: '4th Edition',
+    totalCopies: 5,
+    availableCopies: 3,
+    shelfLocation: 'Stack A, Rack 105',
+    description: 'The standard AI textbook covering intelligent agents, search, probabilistic reasoning, machine learning, and deep neural networks.',
+    status: 'AVAILABLE',
+  });
+
+  const book3 = await Book.create({
+    title: 'Database System Concepts (7th Edition)',
+    isbn: '978-0078022159',
+    author: 'Abraham Silberschatz, Henry F. Korth, S. Sudarshan',
+    category: 'Computer Science',
+    publisher: 'McGraw-Hill',
+    edition: '7th Edition',
+    totalCopies: 8,
+    availableCopies: 7,
+    shelfLocation: 'Stack A, Rack 201',
+    description: 'Comprehensive coverage of relational databases, SQL, query processing, transactions, and NoSQL systems.',
+    status: 'AVAILABLE',
+  });
+
+  const book4 = await Book.create({
+    title: 'Computer Networking: A Top-Down Approach (8th Edition)',
+    isbn: '978-0136681557',
+    author: 'James Kurose, Keith Ross',
+    category: 'Computer Science',
+    publisher: 'Pearson',
+    edition: '8th Edition',
+    totalCopies: 5,
+    availableCopies: 4,
+    shelfLocation: 'Stack B, Rack 110',
+    description: 'Top-down approach focusing on internet protocols, transport layers, software-defined networking, and wireless networks.',
+    status: 'AVAILABLE',
+  });
+
+  const book5 = await Book.create({
+    title: 'Clean Code: A Handbook of Agile Software Craftsmanship',
+    isbn: '978-0132350884',
+    author: 'Robert C. Martin (Uncle Bob)',
+    category: 'Software Engineering',
+    publisher: 'Prentice Hall',
+    edition: '1st Edition',
+    totalCopies: 7,
+    availableCopies: 6,
+    shelfLocation: 'Stack B, Rack 205',
+    description: 'Best practices for writing meaningful names, concise functions, formatting, error handling, and test-driven development.',
+    status: 'AVAILABLE',
+  });
+
+  const book6 = await Book.create({
+    title: 'Deep Learning (Adaptive Computation and Machine Learning)',
+    isbn: '978-0262035613',
+    author: 'Ian Goodfellow, Yoshua Bengio, Aaron Courville',
+    category: 'Artificial Intelligence',
+    publisher: 'MIT Press',
+    edition: '1st Edition',
+    totalCopies: 4,
+    availableCopies: 3,
+    shelfLocation: 'Stack A, Rack 108',
+    description: 'Deep mathematical foundations and algorithms for deep neural networks, CNNs, RNNs, GANs, and generative models.',
+    status: 'AVAILABLE',
+  });
+
+  const book7 = await Book.create({
+    title: 'Advanced Engineering Mathematics (10th Edition)',
+    isbn: '978-0470458365',
+    author: 'Erwin Kreyszig',
+    category: 'Mathematics',
+    publisher: 'Wiley',
+    edition: '10th Edition',
+    totalCopies: 10,
+    availableCopies: 9,
+    shelfLocation: 'Stack C, Rack 101',
+    description: 'Differential equations, linear algebra, vector calculus, Fourier analysis, and complex analysis for engineers.',
+    status: 'AVAILABLE',
+  });
+
+  const book8 = await Book.create({
+    title: 'Electric Machinery Fundamentals (5th Edition)',
+    isbn: '978-0073529547',
+    author: 'Stephen J. Chapman',
+    category: 'Electrical Engineering',
+    publisher: 'McGraw-Hill',
+    edition: '5th Edition',
+    totalCopies: 5,
+    availableCopies: 5,
+    shelfLocation: 'Stack D, Rack 104',
+    description: 'Transformers, AC and DC machinery, induction motors, and modern power electronics converters.',
+    status: 'AVAILABLE',
+  });
+
+  // Seed Circulations
+  // 1. Active borrow by Arjun Kumar (due in 7 days)
+  await BookIssue.create({
+    bookId: book1._id,
+    studentId: student1._id,
+    issuedBy: admin._id,
+    issueDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+    dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    status: 'ISSUED',
+    fineAmount: 0,
+    fineStatus: 'NO_FINE',
+    remarks: 'Approved for Algorithm Analysis project',
+  });
+
+  // 2. Active borrow by Arjun Kumar (due in 11 days)
+  await BookIssue.create({
+    bookId: book2._id,
+    studentId: student1._id,
+    issuedBy: admin._id,
+    issueDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+    dueDate: new Date(Date.now() + 11 * 24 * 60 * 60 * 1000),
+    status: 'ISSUED',
+    fineAmount: 0,
+    fineStatus: 'NO_FINE',
+    remarks: 'Reference material for AI coursework',
+  });
+
+  // 3. Overdue borrow by Priya Sharma (due 4 days ago, ₹20 fine)
+  await BookIssue.create({
+    bookId: book4._id,
+    studentId: student2._id,
+    issuedBy: admin._id,
+    issueDate: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000),
+    dueDate: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000),
+    status: 'ISSUED',
+    fineAmount: 20,
+    fineStatus: 'UNPAID',
+    remarks: 'Reminder notification sent to student email',
+  });
+
+  // 4. Returned borrow by Rohit Singh (returned on time)
+  await BookIssue.create({
+    bookId: book3._id,
+    studentId: student3._id,
+    issuedBy: admin._id,
+    issueDate: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
+    dueDate: new Date(Date.now() - 11 * 24 * 60 * 60 * 1000),
+    returnDate: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
+    status: 'RETURNED',
+    fineAmount: 0,
+    fineStatus: 'NO_FINE',
+    remarks: 'Returned in pristine condition',
+  });
+
+  console.log('✅ Library books and circulations seeded');
+
+  // 13. Audit Logs
   await AuditLog.create({
     userEmail: 'admin@sgtu.edu',
     action: 'SYSTEM_INITIALIZATION',

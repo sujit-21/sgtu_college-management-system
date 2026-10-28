@@ -334,3 +334,43 @@ const auditLogSchema = new Schema(
 );
 
 export const AuditLog = mongoose.models.AuditLog || model('AuditLog', auditLogSchema);
+
+// 19. Book
+const bookSchema = new Schema(
+  {
+    title: { type: String, required: true, trim: true },
+    isbn: { type: String, required: true, unique: true, uppercase: true, trim: true },
+    author: { type: String, required: true, trim: true },
+    category: { type: String, required: true, trim: true },
+    publisher: { type: String, trim: true },
+    edition: { type: String, default: '1st Edition' },
+    totalCopies: { type: Number, default: 1, min: 1 },
+    availableCopies: { type: Number, default: 1, min: 0 },
+    shelfLocation: { type: String, default: 'Main Stacks' },
+    coverImage: { type: String },
+    description: { type: String },
+    status: { type: String, enum: ['AVAILABLE', 'RESERVED', 'OUT_OF_STOCK'], default: 'AVAILABLE' },
+  },
+  { timestamps: true }
+);
+
+export const Book = mongoose.models.Book || model('Book', bookSchema);
+
+// 20. BookIssue
+const bookIssueSchema = new Schema(
+  {
+    bookId: { type: Schema.Types.ObjectId, ref: 'Book', required: true },
+    studentId: { type: Schema.Types.ObjectId, ref: 'StudentProfile', required: true },
+    issuedBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    issueDate: { type: Date, default: Date.now },
+    dueDate: { type: Date, required: true },
+    returnDate: { type: Date },
+    status: { type: String, enum: ['ISSUED', 'RETURNED', 'OVERDUE', 'LOST'], default: 'ISSUED' },
+    fineAmount: { type: Number, default: 0 },
+    fineStatus: { type: String, enum: ['PAID', 'UNPAID', 'WAIVED', 'NO_FINE'], default: 'NO_FINE' },
+    remarks: { type: String },
+  },
+  { timestamps: true }
+);
+
+export const BookIssue = mongoose.models.BookIssue || model('BookIssue', bookIssueSchema);

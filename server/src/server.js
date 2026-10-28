@@ -23,6 +23,7 @@ import examRoutes from './routes/examRoutes.js';
 import feeRoutes from './routes/feeRoutes.js';
 import announcementRoutes from './routes/announcementRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
+import libraryRoutes from './routes/libraryRoutes.js';
 
 dotenv.config();
 
@@ -71,7 +72,7 @@ if (process.env.NODE_ENV !== 'test') {
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'healthy',
-    system: 'Apex College Management System API',
+    system: 'SG Tech University (SGTU) CMS API',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
   });
@@ -91,13 +92,14 @@ app.use('/api/examinations', examRoutes);
 app.use('/api/fees', feeRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/library', libraryRoutes);
 
 // Error Handling Middleware
 app.use(notFound);
 app.use(errorHandler);
 
 const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`✨ Apex University CMS Server listening on http://127.0.0.1:${PORT} [${process.env.NODE_ENV || 'development'}]`);
+  console.log(`✨ SG Tech University (SGTU) CMS Server listening on http://127.0.0.1:${PORT} [${process.env.NODE_ENV || 'development'}]`);
 });
 
 server.on('error', (err) => {

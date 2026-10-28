@@ -18,6 +18,7 @@ import { AssignmentPage } from './pages/assignments/AssignmentPage';
 import { ExamResultsPage } from './pages/examinations/ExamResultsPage';
 import { FeeManagementPage } from './pages/fees/FeeManagementPage';
 import { AnnouncementsPage } from './pages/announcements/AnnouncementsPage';
+import { LibraryPage } from './pages/library/LibraryPage';
 
 export const App = () => {
   const { user } = useAuth();
@@ -112,6 +113,7 @@ export const App = () => {
         <Route path="/assignments" element={<AssignmentPage />} />
         <Route path="/examinations" element={<ExamResultsPage />} />
         <Route path="/fees" element={<FeeManagementPage />} />
+        <Route path="/library" element={<LibraryPage />} />
         <Route path="/announcements" element={<AnnouncementsPage />} />
       </Route>
 

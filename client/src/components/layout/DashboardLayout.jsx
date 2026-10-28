@@ -19,6 +19,7 @@ export const DashboardLayout = () => {
     if (p.includes('/assignments')) return 'Coursework & Assignments';
     if (p.includes('/examinations')) return 'Examinations & Results';
     if (p.includes('/fees')) return 'Fee Management & Invoices';
+    if (p.includes('/library')) return 'Library & Knowledge Center';
     if (p.includes('/announcements')) return 'Campus Announcements';
     if (p.includes('/profile')) return 'Personal Student Profile';
     return 'University Portal';

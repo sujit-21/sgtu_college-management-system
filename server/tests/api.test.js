@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-const BASE_URL = 'http://localhost:5000/api';
+const BASE_URL = 'http://127.0.0.1:5000/api';
 
 test('College Management System - API Verification Suite', async (t) => {
   let adminToken = '';
@@ -104,4 +104,77 @@ test('College Management System - API Verification Suite', async (t) => {
     assert.ok(data.data.some((s) => s.fullName.includes('Arjun')));
     assert.equal(data.pagination.page, 1);
   });
+
+  await t.test('GET /api/library/books should return books catalogue and categories', async () => {
+    const res = await fetch(`${BASE_URL}/library/books`, {
+      headers: { Authorization: `Bearer ${studentToken}` },
+    });
+    assert.equal(res.status, 200);
+    const data = await res.json();
+    assert.equal(data.success, true);
+    assert.ok(data.data.length >= 5);
+    assert.ok(data.categories.length >= 2);
+  });
+
+  await t.test('GET /api/library/stats should return aggregate library metrics', async () => {
+    const res = await fetch(`${BASE_URL}/library/stats`, {
+      headers: { Authorization: `Bearer ${adminToken}` },
+    });
+    assert.equal(res.status, 200);
+    const data = await res.json();
+    assert.equal(data.success, true);
+    assert.ok(data.stats.totalBooks >= 5);
+    assert.ok(data.stats.totalCopies >= 10);
+  });
+
+  await t.test('GET /api/library/issues should return personal borrowings for Student', async () => {
+    const res = await fetch(`${BASE_URL}/library/issues`, {
+      headers: { Authorization: `Bearer ${studentToken}` },
+    });
+    assert.equal(res.status, 200);
+    const data = await res.json();
+    assert.equal(data.success, true);
+    assert.ok(data.data.length >= 1);
+  });
+
+  await t.test('Role Guard: Student cannot add new books to library catalogue', async () => {
+    const res = await fetch(`${BASE_URL}/library/books`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${studentToken}`,
+      },
+      body: JSON.stringify({
+        title: 'Unauthorized Book',
+        isbn: '978-9999999999',
+        author: 'Hacker',
+        category: 'Test',
+      }),
+    });
+    assert.equal(res.status, 403);
+  });
+
+  await t.test('Admin can add new book to library catalogue', async () => {
+    const res = await fetch(`${BASE_URL}/library/books`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${adminToken}`,
+      },
+      body: JSON.stringify({
+        title: 'Quantum Computing and Information',
+        isbn: '978-0521635035',
+        author: 'Michael A. Nielsen, Isaac L. Chuang',
+        category: 'Quantum Tech',
+        publisher: 'Cambridge University Press',
+        totalCopies: 4,
+        shelfLocation: 'Stack Q, Rack 301',
+      }),
+    });
+    assert.equal(res.status, 201);
+    const data = await res.json();
+    assert.equal(data.success, true);
+    assert.equal(data.data.title, 'Quantum Computing and Information');
+  });
 });
+

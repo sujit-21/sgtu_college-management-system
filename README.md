@@ -44,6 +44,7 @@ A complete, modern, production-oriented College Management System (CMS) engineer
 - **Assignments & Submissions**: Rich assignment briefs, deadline tracking, file link submissions, instructor review, and grade feedback.
 - **Examinations & Transcripts**: Exam timetables, hall ticket/room allocations, marks entry, automated letter grading (`A+`, `A`, `B+`, etc.), and printable report cards.
 - **Fee Management & Receipts**: Automated semester invoices, partial payment handling, printable PDF-style receipt modal.
+- **Library & Knowledge Center**: University book catalogue search, real-time availability & physical shelf rack mapping, book issuing to students, return processing, overdue calculation (₹5/day late fine), and student personal loan history.
 - **Campus Notice Board**: Categorized bulletins (`ACADEMIC`, `EXAM`, `EVENT`, `URGENT`) with priority markers.
 
 ---
@@ -135,7 +136,12 @@ npm test
   ✔ Admin can access Admin dashboard statistics
   ✔ GET /api/departments should return all departments with counts
   ✔ GET /api/students should support search, filter and pagination
-✔ College Management System - API Verification Suite (10 passed, 0 failed)
+  ✔ GET /api/library/books should return books catalogue and categories
+  ✔ GET /api/library/stats should return aggregate library metrics
+  ✔ GET /api/library/issues should return personal borrowings for Student
+  ✔ Role Guard: Student cannot add new books to library catalogue
+  ✔ Admin can add new book to library catalogue
+✔ College Management System - API Verification Suite (15 passed, 0 failed)
 ```
 
 ---
@@ -168,6 +174,12 @@ npm test
 | `POST` | `/api/exams/results` | Teacher / Admin | Upload examination grades |
 | `GET` | `/api/fees/invoices` | Authenticated | Fee invoices with payment status |
 | `POST` | `/api/fees/pay` | Student / Accountant | Record invoice payment & generate receipt |
+| `GET` | `/api/library/books` | Authenticated | Searchable library catalogue & stock counts |
+| `POST` | `/api/library/books` | Admin | Register new textbook into library inventory |
+| `GET` | `/api/library/issues` | Authenticated | Circulation borrowing records & overdue loans |
+| `POST` | `/api/library/issues` | Admin / Teacher | Issue book to enrolled student |
+| `POST` | `/api/library/issues/:id/return` | Admin / Teacher | Accept return, calculate overdue fines |
+| `GET` | `/api/library/stats` | Authenticated | Library holdings, active loans, overdue metrics |
 | `GET` | `/api/announcements` | Authenticated | Campus notice board updates |
 
 ---
