@@ -1,0 +1,357 @@
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  TEACHER
+  STUDENT
+  ACCOUNTANT
+}
+
+enum AcademicStatus {
+  ACTIVE
+  PROBATION
+  GRADUATED
+  SUSPENDED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+enum SubmissionStatus {
+  SUBMITTED
+  GRADED
+  LATE
+}
+
+enum ExamStatus {
+  UPCOMING
+  ONGOING
+  COMPLETED
+  RESULTS_PUBLISHED
+}
+
+enum FeeStatus {
+  UNPAID
+  PARTIAL
+  PAID
+  OVERDUE
+}
+
+enum PaymentMethod {
+  ONLINE
+  BANK_TRANSFER
+  CASH
+  CHEQUE
+}
+
+model User {
+  id             String          @id @default(auto()) @map("_id") @db.ObjectId
+  email          String          @unique
+  collegeId      String          @unique
+  password       String
+  role           Role            @default(STUDENT)
+  isActive       Boolean         @default(true)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+
+  studentProfile StudentProfile?
+  teacherProfile TeacherProfile?
+  notifications  Notification[]
+}
+
+model Department {
+  id          String           @id @default(auto()) @map("_id") @db.ObjectId
+  code        String           @unique
+  name        String
+  description String?
+  headName    String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  courses     Course[]
+  teachers    TeacherProfile[]
+  students    StudentProfile[]
+}
+
+model Course {
+  id             String           @id @default(auto()) @map("_id") @db.ObjectId
+  code           String           @unique
+  name           String
+  description    String?
+  durationYears  Int              @default(4)
+  totalSemesters Int              @default(8)
+  credits        Int              @default(160)
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  departmentId   String           @db.ObjectId
+  department     Department       @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+
+  subjects       Subject[]
+  students       StudentProfile[]
+  assignments    Assignment[]
+}
+
+model Subject {
+  id          String             @id @default(auto()) @map("_id") @db.ObjectId
+  code        String             @unique
+  name        String
+  semester    Int                @default(1)
+  credits     Int                @default(4)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  courseId    String             @db.ObjectId
+  course      Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  teacherId   String?            @db.ObjectId
+  teacher     TeacherProfile?    @relation(fields: [teacherId], references: [id])
+
+  attendances   AttendanceRecord[]
+  assignments   Assignment[]
+  examSchedules ExamSchedule[]
+  results       ExamResult[]
+}
+
+model StudentProfile {
+  id                 String             @id @default(auto()) @map("_id") @db.ObjectId
+  registrationNumber String             @unique
+  fullName           String
+  phone              String
+  dateOfBirth        String?
+  address            String?
+  gender             String?
+  bloodGroup         String?
+  currentSemester    Int                @default(1)
+  admissionYear      Int                @default(2026)
+  academicStatus     AcademicStatus     @default(ACTIVE)
+  avatar             String?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  userId             String             @unique @db.ObjectId
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  departmentId       String             @db.ObjectId
+  department         Department         @relation(fields: [departmentId], references: [id])
+
+  courseId           String             @db.ObjectId
+  course             Course             @relation(fields: [courseId], references: [id])
+
+  attendances        AttendanceRecord[]
+  submissions        AssignmentSubmission[]
+  results            ExamResult[]
+  invoices           FeeInvoice[]
+}
+
+model TeacherProfile {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  employeeId     String        @unique
+  fullName       String
+  phone          String
+  designation    String        @default("Assistant Professor")
+  qualification  String        @default("M.Tech / Ph.D")
+  specialization String?
+  joiningDate    String
+  avatar         String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  userId         String        @unique @db.ObjectId
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  departmentId   String        @db.ObjectId
+  department     Department    @relation(fields: [departmentId], references: [id])
+
+  subjects       Subject[]
+  assignments    Assignment[]
+}
+
+model AttendanceRecord {
+  id          String           @id @default(auto()) @map("_id") @db.ObjectId
+  date        DateTime
+  semester    Int              @default(1)
+  status      AttendanceStatus @default(PRESENT)
+  remarks     String?
+  markedById  String?          @db.ObjectId
+  createdAt   DateTime         @default(now())
+
+  studentId   String           @db.ObjectId
+  student     StudentProfile   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  subjectId   String           @db.ObjectId
+  subject     Subject          @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+}
+
+model Assignment {
+  id            String                 @id @default(auto()) @map("_id") @db.ObjectId
+  title         String
+  description   String
+  semester      Int                    @default(1)
+  dueDate       DateTime
+  totalMarks    Int                    @default(100)
+  attachmentUrl String?
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+
+  subjectId     String                 @db.ObjectId
+  subject       Subject                @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  courseId      String                 @db.ObjectId
+  course        Course                 @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  teacherId     String                 @db.ObjectId
+  teacher       TeacherProfile         @relation(fields: [teacherId], references: [id])
+
+  submissions   AssignmentSubmission[]
+}
+
+model AssignmentSubmission {
+  id             String           @id @default(auto()) @map("_id") @db.ObjectId
+  submissionText String?
+  fileUrl        String?
+  submittedAt    DateTime         @default(now())
+  status         SubmissionStatus @default(SUBMITTED)
+  obtainedMarks  Float?
+  feedback       String?
+
+  assignmentId   String           @db.ObjectId
+  assignment     Assignment       @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+
+  studentId      String           @db.ObjectId
+  student        StudentProfile   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model Examination {
+  id           String         @id @default(auto()) @map("_id") @db.ObjectId
+  title        String
+  academicYear String         @default("2025-2026")
+  startDate    DateTime
+  endDate      DateTime
+  status       ExamStatus     @default(UPCOMING)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  schedules    ExamSchedule[]
+  results      ExamResult[]
+}
+
+model ExamSchedule {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  examDate      DateTime
+  startTime     String      @default("10:00 AM")
+  endTime       String      @default("01:00 PM")
+  room          String      @default("Hall A-101")
+  maxMarks      Int         @default(100)
+
+  examinationId String      @db.ObjectId
+  examination   Examination @relation(fields: [examinationId], references: [id], onDelete: Cascade)
+
+  subjectId     String      @db.ObjectId
+  subject       Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+}
+
+model ExamResult {
+  id            String      @id @default(auto()) @map("_id") @db.ObjectId
+  obtainedMarks Float
+  maxMarks      Float       @default(100)
+  grade         String      @default("A")
+  isPublished   Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  examinationId String      @db.ObjectId
+  examination   Examination @relation(fields: [examinationId], references: [id], onDelete: Cascade)
+
+  studentId     String      @db.ObjectId
+  student       StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  subjectId     String      @db.ObjectId
+  subject       Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+}
+
+model FeeCategory {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String   @unique
+  amount    Float
+  frequency String   @default("SEMESTER")
+  createdAt DateTime @default(now())
+}
+
+model FeeInvoice {
+  id            String          @id @default(auto()) @map("_id") @db.ObjectId
+  invoiceNumber String          @unique
+  title         String
+  totalAmount   Float
+  paidAmount    Float           @default(0)
+  dueDate       DateTime
+  status        FeeStatus       @default(UNPAID)
+  semester      Int             @default(1)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  studentId     String          @db.ObjectId
+  student       StudentProfile  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  payments      PaymentRecord[]
+}
+
+model PaymentRecord {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  transactionId String        @unique
+  amount        Float
+  paymentMethod PaymentMethod @default(ONLINE)
+  paymentDate   DateTime      @default(now())
+  receiptNumber String        @unique
+  status        String        @default("COMPLETED")
+
+  invoiceId     String        @db.ObjectId
+  invoice       FeeInvoice    @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model Announcement {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  title      String
+  content    String
+  category   String   @default("ACADEMIC")
+  targetRole String   @default("ALL")
+  authorName String   @default("Administration")
+  priority   String   @default("NORMAL")
+  createdAt  DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  message   String
+  type      String   @default("INFO")
+  isRead    Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userEmail String?
+  action    String
+  resource  String
+  details   String?
+  ipAddress String?
+  timestamp DateTime @default(now())
+}
