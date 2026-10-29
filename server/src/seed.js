@@ -17,6 +17,7 @@ import {
   FeeCategory,
   FeeInvoice,
   PaymentRecord,
+  ScholarshipAward,
   Announcement,
   Notification,
   AuditLog,
@@ -59,6 +60,7 @@ async function seed() {
     Announcement.deleteMany({}),
     PaymentRecord.deleteMany({}),
     FeeInvoice.deleteMany({}),
+    ScholarshipAward.deleteMany({}),
     FeeCategory.deleteMany({}),
     ExamResult.deleteMany({}),
     ExamSchedule.deleteMany({}),
@@ -639,51 +641,212 @@ async function seed() {
     frequency: 'SEMESTER',
   });
 
+  // 10b. Scholarship Awards & Concessions Ledger
+  const sch1 = await ScholarshipAward.create({
+    studentId: student1._id,
+    scholarshipName: 'Vice Chancellor Merit Excellence Scholarship (CGPA > 9.0)',
+    category: 'MERIT',
+    grantType: 'PERCENTAGE',
+    concessionValue: 30, // 30% tuition waiver
+    deductionAmount: 25500,
+    grossTuitionFee: 85000,
+    netPayableFee: 59500,
+    academicYear: '2025-2026',
+    semester: 6,
+    sanctionOrderNumber: 'SCH-2026-MER-1082',
+    sanctionedBy: 'Academic Council & Dean of Academics',
+    status: 'SANCTIONED',
+    remarks: 'Granted for maintaining rank in top 2% of CSE cohort.',
+  });
+
+  const sch2 = await ScholarshipAward.create({
+    studentId: student2._id,
+    scholarshipName: 'Post-Matric State Government Welfare Concession',
+    category: 'GOVERNMENT_CASTE',
+    grantType: 'FIXED_AMOUNT',
+    concessionValue: 35000,
+    deductionAmount: 35000,
+    grossTuitionFee: 85000,
+    netPayableFee: 50000,
+    academicYear: '2025-2026',
+    semester: 6,
+    sanctionOrderNumber: 'SCH-2026-GOV-4190',
+    sanctionedBy: 'Directorate of Higher Education & Welfare Board',
+    status: 'SANCTIONED',
+    remarks: 'Direct subsidy sanctioned from State Welfare treasury.',
+  });
+
+  const sch3 = await ScholarshipAward.create({
+    studentId: student3._id,
+    scholarshipName: 'National Level Sports & Athletics Fellowship',
+    category: 'SPORTS',
+    grantType: 'PERCENTAGE',
+    concessionValue: 50, // 50% waiver
+    deductionAmount: 42500,
+    grossTuitionFee: 85000,
+    netPayableFee: 42500,
+    academicYear: '2025-2026',
+    semester: 6,
+    sanctionOrderNumber: 'SCH-2026-SPO-7721',
+    sanctionedBy: 'Sports Advisory Board & Registrar',
+    status: 'SANCTIONED',
+    remarks: 'Inter-University Gold Medalist in National Athletics.',
+  });
+
+  // Invoice 1: Arjun Kumar (With Merit Scholarship + 3-Part Milestone Installments)
+  // Gross: 85,000, Scholarship: 25,500, Net: 59,500
+  // M1 (40%): 23,800 (Paid)
+  // M2 (30%): 17,850 (Unpaid, Due Soon)
+  // M3 (30%): 17,850 (Unpaid, End-Term)
   const inv1 = await FeeInvoice.create({
     invoiceNumber: 'INV-2026-S6-001',
-    title: 'Semester 6 Academic & Laboratory Tuition',
-    totalAmount: 77000,
-    paidAmount: 77000,
-    dueDate: new Date('2026-08-15T00:00:00Z'),
-    status: 'PAID',
+    title: 'Semester 6 Engineering & Lab Tuition',
+    grossAmount: 85000,
+    scholarshipDiscount: 25500,
+    scholarshipId: sch1._id,
+    scholarshipName: sch1.scholarshipName,
+    totalAmount: 59500,
+    paidAmount: 23800,
+    dueDate: new Date('2026-11-15T00:00:00Z'),
+    status: 'PARTIAL',
     semester: 6,
     studentId: student1._id,
+    hasInstallmentPlan: true,
+    installments: [
+      {
+        installmentNumber: 1,
+        milestoneTitle: 'Milestone 1: Semester Registration & Course Enrollment (40%)',
+        percentage: 40,
+        amount: 23800,
+        dueDate: new Date('2026-08-15T00:00:00Z'),
+        paidAmount: 23800,
+        status: 'PAID',
+        receiptNumber: 'RCP-2026-0881',
+        paymentDate: new Date('2026-08-12T14:32:00Z'),
+        transactionId: 'TXN-9847291823',
+        reminderSent: true,
+        lastReminderDate: new Date('2026-08-10T09:00:00Z'),
+      },
+      {
+        installmentNumber: 2,
+        milestoneTitle: 'Milestone 2: Mid-Term Examination & Internal Assessment Clearance (30%)',
+        percentage: 30,
+        amount: 17850,
+        dueDate: new Date('2026-11-05T00:00:00Z'),
+        paidAmount: 0,
+        status: 'UNPAID',
+        reminderSent: true,
+        lastReminderDate: new Date('2026-10-25T10:30:00Z'),
+      },
+      {
+        installmentNumber: 3,
+        milestoneTitle: 'Milestone 3: End-Term Exam, Practical Labs & No-Dues Clearance (30%)',
+        percentage: 30,
+        amount: 17850,
+        dueDate: new Date('2026-12-20T00:00:00Z'),
+        paidAmount: 0,
+        status: 'UNPAID',
+        reminderSent: false,
+      },
+    ],
   });
 
   await PaymentRecord.create({
     invoiceId: inv1._id,
     studentId: student1._id,
-    amount: 77000,
+    installmentNumber: 1,
+    amount: 23800,
     transactionId: 'TXN-9847291823',
     paymentMethod: 'ONLINE',
     receiptNumber: 'RCP-2026-0881',
     status: 'COMPLETED',
-    paymentDate: new Date('2026-08-10T14:32:00Z'),
+    paymentDate: new Date('2026-08-12T14:32:00Z'),
   });
 
+  // Invoice 2: Priya Sharma (With State Govt Scholarship + 3-Part Milestone Installments)
+  // Gross: 85,000, Scholarship: 35,000, Net: 50,000
+  // M1 (40%): 20,000 (Paid)
+  // M2 (30%): 15,000 (Paid)
+  // M3 (30%): 15,000 (Due Soon)
   const inv2 = await FeeInvoice.create({
     invoiceNumber: 'INV-2026-S6-002',
-    title: 'Semester 6 Academic & Laboratory Tuition',
-    totalAmount: 77000,
-    paidAmount: 40000,
-    dueDate: new Date('2026-11-15T00:00:00Z'),
+    title: 'Semester 6 Engineering & Lab Tuition',
+    grossAmount: 85000,
+    scholarshipDiscount: 35000,
+    scholarshipId: sch2._id,
+    scholarshipName: sch2.scholarshipName,
+    totalAmount: 50000,
+    paidAmount: 35000,
+    dueDate: new Date('2026-11-25T00:00:00Z'),
     status: 'PARTIAL',
     semester: 6,
     studentId: student2._id,
+    hasInstallmentPlan: true,
+    installments: [
+      {
+        installmentNumber: 1,
+        milestoneTitle: 'Milestone 1: Semester Registration & Course Enrollment (40%)',
+        percentage: 40,
+        amount: 20000,
+        dueDate: new Date('2026-08-15T00:00:00Z'),
+        paidAmount: 20000,
+        status: 'PAID',
+        receiptNumber: 'RCP-2026-0912',
+        paymentDate: new Date('2026-08-14T11:15:00Z'),
+        transactionId: 'TXN-9847291899',
+        reminderSent: true,
+      },
+      {
+        installmentNumber: 2,
+        milestoneTitle: 'Milestone 2: Mid-Term Examination & Internal Assessment Clearance (30%)',
+        percentage: 30,
+        amount: 15000,
+        dueDate: new Date('2026-10-15T00:00:00Z'),
+        paidAmount: 15000,
+        status: 'PAID',
+        receiptNumber: 'RCP-2026-1104',
+        paymentDate: new Date('2026-10-10T16:20:00Z'),
+        transactionId: 'TXN-9847292211',
+        reminderSent: true,
+      },
+      {
+        installmentNumber: 3,
+        milestoneTitle: 'Milestone 3: End-Term Exam, Practical Labs & No-Dues Clearance (30%)',
+        percentage: 30,
+        amount: 15000,
+        dueDate: new Date('2026-12-20T00:00:00Z'),
+        paidAmount: 0,
+        status: 'UNPAID',
+        reminderSent: false,
+      },
+    ],
   });
 
   await PaymentRecord.create({
     invoiceId: inv2._id,
     studentId: student2._id,
-    amount: 40000,
+    installmentNumber: 1,
+    amount: 20000,
     transactionId: 'TXN-9847291899',
     paymentMethod: 'BANK_TRANSFER',
     receiptNumber: 'RCP-2026-0912',
     status: 'COMPLETED',
-    paymentDate: new Date('2026-09-02T11:15:00Z'),
+    paymentDate: new Date('2026-08-14T11:15:00Z'),
   });
 
-  console.log('✅ Fees and payment transactions seeded');
+  await PaymentRecord.create({
+    invoiceId: inv2._id,
+    studentId: student2._id,
+    installmentNumber: 2,
+    amount: 15000,
+    transactionId: 'TXN-9847292211',
+    paymentMethod: 'ONLINE',
+    receiptNumber: 'RCP-2026-1104',
+    status: 'COMPLETED',
+    paymentDate: new Date('2026-10-10T16:20:00Z'),
+  });
+
+  console.log('✅ Fees, scholarships, and 3-part installment plans seeded');
 
   // 11. Announcements
   await Announcement.create({

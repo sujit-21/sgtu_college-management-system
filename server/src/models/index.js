@@ -334,7 +334,11 @@ const feeInvoiceSchema = new Schema(
     invoiceNumber: { type: String, required: true, unique: true, uppercase: true },
     studentId: { type: Schema.Types.ObjectId, ref: 'StudentProfile', required: true },
     title: { type: String, required: true },
-    totalAmount: { type: Number, required: true },
+    grossAmount: { type: Number },
+    scholarshipDiscount: { type: Number, default: 0 },
+    scholarshipId: { type: Schema.Types.ObjectId, ref: 'ScholarshipAward' },
+    scholarshipName: { type: String },
+    totalAmount: { type: Number, required: true }, // Net Payable Amount
     paidAmount: { type: Number, default: 0 },
     dueDate: { type: Date, required: true },
     status: {
@@ -343,22 +347,80 @@ const feeInvoiceSchema = new Schema(
       default: 'UNPAID',
     },
     semester: { type: Number, default: 1 },
+    hasInstallmentPlan: { type: Boolean, default: false },
+    installments: [
+      {
+        installmentNumber: { type: Number }, // 1, 2, 3
+        milestoneTitle: { type: String },
+        percentage: { type: Number }, // 40, 30, 30
+        amount: { type: Number },
+        dueDate: { type: Date },
+        paidAmount: { type: Number, default: 0 },
+        status: {
+          type: String,
+          enum: ['UNPAID', 'PARTIAL', 'PAID', 'OVERDUE'],
+          default: 'UNPAID',
+        },
+        receiptNumber: { type: String },
+        paymentDate: { type: Date },
+        transactionId: { type: String },
+        reminderSent: { type: Boolean, default: false },
+        lastReminderDate: { type: Date },
+      },
+    ],
   },
   { timestamps: true }
 );
 
 export const FeeInvoice = mongoose.models.FeeInvoice || model('FeeInvoice', feeInvoiceSchema);
 
+// 14b. ScholarshipAward
+const scholarshipAwardSchema = new Schema(
+  {
+    studentId: { type: Schema.Types.ObjectId, ref: 'StudentProfile', required: true },
+    scholarshipName: { type: String, required: true },
+    category: {
+      type: String,
+      enum: ['MERIT', 'GOVERNMENT_CASTE', 'SPORTS', 'NEED_BASED_EWS', 'INSTITUTIONAL_ALUMNI'],
+      default: 'MERIT',
+    },
+    grantType: {
+      type: String,
+      enum: ['PERCENTAGE', 'FIXED_AMOUNT'],
+      default: 'PERCENTAGE',
+    },
+    concessionValue: { type: Number, required: true }, // e.g. 30% or ₹25,000
+    deductionAmount: { type: Number, required: true }, // Computed ₹ discount
+    grossTuitionFee: { type: Number, default: 85000 },
+    netPayableFee: { type: Number, default: 59500 },
+    academicYear: { type: String, default: '2025-2026' },
+    semester: { type: Number, default: 1 },
+    sanctionOrderNumber: { type: String, required: true, unique: true, uppercase: true },
+    sanctionedBy: { type: String, default: 'Academic Council & Finance Bureau' },
+    status: {
+      type: String,
+      enum: ['SANCTIONED', 'DISBURSED', 'PENDING_VERIFICATION', 'REJECTED'],
+      default: 'SANCTIONED',
+    },
+    documentProofUrl: { type: String },
+    remarks: { type: String },
+  },
+  { timestamps: true }
+);
+
+export const ScholarshipAward = mongoose.models.ScholarshipAward || model('ScholarshipAward', scholarshipAwardSchema);
+
 // 15. PaymentRecord
 const paymentRecordSchema = new Schema(
   {
     invoiceId: { type: Schema.Types.ObjectId, ref: 'FeeInvoice', required: true },
     studentId: { type: Schema.Types.ObjectId, ref: 'StudentProfile' },
+    installmentNumber: { type: Number },
     transactionId: { type: String, required: true, unique: true },
     amount: { type: Number, required: true },
     paymentMethod: {
       type: String,
-      enum: ['ONLINE', 'BANK_TRANSFER', 'CASH', 'CHEQUE'],
+      enum: ['ONLINE', 'BANK_TRANSFER', 'CASH', 'CHEQUE', 'UPI_QR', 'DEBIT_CREDIT_CARD'],
       default: 'ONLINE',
     },
     paymentDate: { type: Date, default: Date.now },
