@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "node --watch --watch-path=src src/server.js",
+    "dev": "nodemon src/server.js",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:seed": "node src/seed.js",
@@ -28,6 +28,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "nodemon": "^3.1.14",
     "prisma": "^5.22.0"
   }
 }
