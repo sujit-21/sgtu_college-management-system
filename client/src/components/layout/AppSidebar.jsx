@@ -30,77 +30,152 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
   const { user, logout } = useAuth();
   const role = user?.role || 'STUDENT';
 
-  // Navigation schema based on user role
-  const getNavLinks = () => {
+  // Grouped Navigation schema based on role
+  const getNavSections = () => {
     if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
       return [
-        { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-        { name: 'Students', path: '/admin/students', icon: Users },
-        { name: 'Faculty & Staff', path: '/admin/teachers', icon: UserCheck },
-        { name: 'Depts & Courses', path: '/admin/academic-structure', icon: Building2 },
-        { name: 'Class Timetable', path: '/timetable', icon: Calendar },
-        { name: 'Attendance', path: '/attendance', icon: CalendarCheck },
-        { name: 'Assignments', path: '/assignments', icon: FileSpreadsheet },
-        { name: 'Exams & Results', path: '/examinations', icon: Award },
-        { name: 'Fees & Invoices', path: '/fees', icon: CreditCard },
-        { name: 'Faculty Payroll', path: '/payroll', icon: Landmark },
-        { name: 'ID & Certificates', path: '/certificates', icon: FileText },
-        { name: 'Library & Books', path: '/library', icon: BookOpen },
-        { name: 'Hostel & Housing', path: '/hostel', icon: Building },
-        { name: 'Campus Transport', path: '/transport', icon: Bus },
-        { name: 'Placements (T&P)', path: '/placement', icon: Briefcase },
-        { name: 'Leaves & Grievance', path: '/leave-grievance', icon: LifeBuoy },
-        { name: 'Announcements', path: '/announcements', icon: Bell },
+        {
+          title: 'Main',
+          links: [
+            { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
+            { name: 'Students', path: '/admin/students', icon: Users },
+            { name: 'Faculty & Staff', path: '/admin/teachers', icon: UserCheck },
+            { name: 'Depts & Courses', path: '/admin/academic-structure', icon: Building2 },
+          ],
+        },
+        {
+          title: 'Academics',
+          links: [
+            { name: 'Class Timetable', path: '/timetable', icon: Calendar },
+            { name: 'Attendance', path: '/attendance', icon: CalendarCheck },
+            { name: 'Assignments', path: '/assignments', icon: FileSpreadsheet },
+            { name: 'Exams & Results', path: '/examinations', icon: Award },
+          ],
+        },
+        {
+          title: 'Operations & Finance',
+          links: [
+            { name: 'Fees & Invoices', path: '/fees', icon: CreditCard },
+            { name: 'Faculty Payroll', path: '/payroll', icon: Landmark },
+            { name: 'ID & Certificates', path: '/certificates', icon: FileText },
+            { name: 'Library & Books', path: '/library', icon: BookOpen },
+            { name: 'Hostel & Housing', path: '/hostel', icon: Building },
+            { name: 'Campus Transport', path: '/transport', icon: Bus },
+            { name: 'Placements (T&P)', path: '/placement', icon: Briefcase },
+          ],
+        },
+        {
+          title: 'Support',
+          links: [
+            { name: 'Leaves & Grievance', path: '/leave-grievance', icon: LifeBuoy },
+            { name: 'Announcements', path: '/announcements', icon: Bell },
+          ],
+        },
       ];
     }
 
     if (role === 'TEACHER') {
       return [
-        { name: 'Teacher Dashboard', path: '/teacher/dashboard', icon: LayoutDashboard },
-        { name: 'Class Timetable', path: '/timetable', icon: Calendar },
-        { name: 'Mark Attendance', path: '/attendance', icon: CalendarCheck },
-        { name: 'Assignments & Grading', path: '/assignments', icon: FileSpreadsheet },
-        { name: 'Marks & Results', path: '/examinations', icon: Award },
-        { name: 'My Salary Slips', path: '/payroll', icon: Landmark },
-        { name: 'Library & Books', path: '/library', icon: BookOpen },
-        { name: 'Campus Transport', path: '/transport', icon: Bus },
-        { name: 'Leaves & Grievance', path: '/leave-grievance', icon: LifeBuoy },
-        { name: 'Announcements', path: '/announcements', icon: Bell },
+        {
+          title: 'Main',
+          links: [
+            { name: 'Teacher Dashboard', path: '/teacher/dashboard', icon: LayoutDashboard },
+          ],
+        },
+        {
+          title: 'Academics',
+          links: [
+            { name: 'Class Timetable', path: '/timetable', icon: Calendar },
+            { name: 'Mark Attendance', path: '/attendance', icon: CalendarCheck },
+            { name: 'Assignments & Grading', path: '/assignments', icon: FileSpreadsheet },
+            { name: 'Marks & Results', path: '/examinations', icon: Award },
+          ],
+        },
+        {
+          title: 'Campus & Career',
+          links: [
+            { name: 'My Salary Slips', path: '/payroll', icon: Landmark },
+            { name: 'Library & Books', path: '/library', icon: BookOpen },
+            { name: 'Campus Transport', path: '/transport', icon: Bus },
+          ],
+        },
+        {
+          title: 'Support',
+          links: [
+            { name: 'Leaves & Grievance', path: '/leave-grievance', icon: LifeBuoy },
+            { name: 'Announcements', path: '/announcements', icon: Bell },
+          ],
+        },
       ];
     }
 
     if (role === 'ACCOUNTANT') {
       return [
-        { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
-        { name: 'Fees & Invoices', path: '/fees', icon: CreditCard },
-        { name: 'Faculty Payroll', path: '/payroll', icon: Landmark },
-        { name: 'Fee No-Dues Certs', path: '/certificates', icon: FileText },
-        { name: 'Students', path: '/admin/students', icon: Users },
-        { name: 'Library & Books', path: '/library', icon: BookOpen },
-        { name: 'Announcements', path: '/announcements', icon: Bell },
+        {
+          title: 'Main',
+          links: [
+            { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
+          ],
+        },
+        {
+          title: 'Finance & Operations',
+          links: [
+            { name: 'Fees & Invoices', path: '/fees', icon: CreditCard },
+            { name: 'Faculty Payroll', path: '/payroll', icon: Landmark },
+            { name: 'Fee No-Dues Certs', path: '/certificates', icon: FileText },
+            { name: 'Student Records', path: '/admin/students', icon: Users },
+            { name: 'Library Management', path: '/library', icon: BookOpen },
+          ],
+        },
+        {
+          title: 'Support',
+          links: [
+            { name: 'Announcements', path: '/announcements', icon: Bell },
+          ],
+        },
       ];
     }
 
     // Default: STUDENT
     return [
-      { name: 'Student Dashboard', path: '/student/dashboard', icon: LayoutDashboard },
-      { name: 'My Profile', path: '/student/profile', icon: User },
-      { name: 'Class Timetable', path: '/timetable', icon: Calendar },
-      { name: 'ID Card & Certs', path: '/certificates', icon: FileText },
-      { name: 'Attendance Record', path: '/attendance', icon: CalendarCheck },
-      { name: 'Coursework', path: '/assignments', icon: FileSpreadsheet },
-      { name: 'Exams & Grades', path: '/examinations', icon: Award },
-      { name: 'Fee Receipts', path: '/fees', icon: CreditCard },
-      { name: 'Library & Books', path: '/library', icon: BookOpen },
-      { name: 'Hostel & Gate Pass', path: '/hostel', icon: Building },
-      { name: 'Campus Bus Pass', path: '/transport', icon: Bus },
-      { name: 'Campus Placements', path: '/placement', icon: Briefcase },
-      { name: 'Leaves & Grievance', path: '/leave-grievance', icon: LifeBuoy },
-      { name: 'Announcements', path: '/announcements', icon: Bell },
+      {
+        title: 'Main',
+        links: [
+          { name: 'Student Dashboard', path: '/student/dashboard', icon: LayoutDashboard },
+          { name: 'My Profile', path: '/student/profile', icon: User },
+        ],
+      },
+      {
+        title: 'Academics',
+        links: [
+          { name: 'Class Timetable', path: '/timetable', icon: Calendar },
+          { name: 'ID Card & Certs', path: '/certificates', icon: FileText },
+          { name: 'Attendance Record', path: '/attendance', icon: CalendarCheck },
+          { name: 'Coursework', path: '/assignments', icon: FileSpreadsheet },
+          { name: 'Exams & Grades', path: '/examinations', icon: Award },
+        ],
+      },
+      {
+        title: 'Campus Life',
+        links: [
+          { name: 'Fee Receipts', path: '/fees', icon: CreditCard },
+          { name: 'Library & Books', path: '/library', icon: BookOpen },
+          { name: 'Hostel & Gate Pass', path: '/hostel', icon: Building },
+          { name: 'Campus Bus Pass', path: '/transport', icon: Bus },
+          { name: 'Campus Placements', path: '/placement', icon: Briefcase },
+        ],
+      },
+      {
+        title: 'Support',
+        links: [
+          { name: 'Leaves & Grievance', path: '/leave-grievance', icon: LifeBuoy },
+          { name: 'Announcements', path: '/announcements', icon: Bell },
+        ],
+      },
     ];
   };
 
-  const navLinks = getNavLinks();
+  const navSections = getNavSections();
 
   const sidebarContent = (
     <div className="flex flex-col h-full bg-white dark:bg-navy-900 border-r border-slate-200 dark:border-navy-800 text-slate-800 dark:text-white select-none transition-colors">
@@ -134,29 +209,40 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
         </button>
       </div>
 
-      {/* Nav List with smooth scroll */}
-      <div className="flex-1 overflow-y-auto py-3 px-3 space-y-1 custom-scrollbar">
-        {navLinks.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={closeMobileSidebar}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 group ${
-                  isActive
-                    ? 'bg-gradient-to-r from-brand-600 to-brand-500 text-white shadow-md shadow-brand-500/20 font-bold'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-navy-800'
-                }`
-              }
-              title={isCollapsed ? item.name : undefined}
-            >
-              <Icon className="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" />
-              {!isCollapsed && <span className="truncate">{item.name}</span>}
-            </NavLink>
-          );
-        })}
+      {/* Nav List with organized sections */}
+      <div className="flex-1 overflow-y-auto py-3 px-3 space-y-4 custom-scrollbar">
+        {navSections.map((section, idx) => (
+          <div key={idx} className="space-y-1">
+            {!isCollapsed && (
+              <div className="px-3 pt-1 pb-1 text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 select-none">
+                {section.title}
+              </div>
+            )}
+            {section.links.map((item) => {
+              const Icon = item.icon;
+              return (
+                <NavLink
+                  key={item.path}
+                  to={item.path}
+                  onClick={closeMobileSidebar}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 group ${
+                      isCollapsed ? 'justify-center px-0' : ''
+                    } ${
+                      isActive
+                        ? 'bg-gradient-to-r from-brand-600 to-brand-500 text-white shadow-md shadow-brand-500/20 font-bold'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-navy-800'
+                    }`
+                  }
+                  title={isCollapsed ? item.name : undefined}
+                >
+                  <Icon className="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" />
+                  {!isCollapsed && <span className="truncate">{item.name}</span>}
+                </NavLink>
+              );
+            })}
+          </div>
+        ))}
       </div>
 
       {/* User Mini Profile & Logout */}
@@ -173,7 +259,7 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
               </div>
               <div className="flex flex-col truncate">
                 <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                  {user?.email?.split('@')[0]}
+                  {user?.profile?.fullName || user?.email?.split('@')[0]}
                 </span>
                 <span className="text-[10px] text-slate-400 capitalize font-medium">{role.toLowerCase()}</span>
               </div>
@@ -194,13 +280,15 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
 
   return (
     <>
-      {/* Desktop Sidebar */}
+      {/* Desktop Persistent Sidebar in Normal Document Flow */}
       <aside
-        className={`hidden md:block fixed top-0 left-0 z-30 h-screen transition-all duration-300 ${
+        className={`hidden md:block shrink-0 transition-all duration-300 z-30 ${
           isCollapsed ? 'w-20' : 'w-64'
         }`}
       >
-        {sidebarContent}
+        <div className="sticky top-0 h-screen overflow-hidden flex flex-col">
+          {sidebarContent}
+        </div>
       </aside>
 
       {/* Mobile Drawer Backdrop */}
@@ -211,9 +299,9 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
         />
       )}
 
-      {/* Mobile Sidebar Drawer */}
+      {/* Mobile Sidebar Slide-over Drawer */}
       <aside
-        className={`md:hidden fixed top-0 left-0 z-50 h-screen w-72 transition-transform duration-300 ease-in-out ${
+        className={`md:hidden fixed inset-y-0 left-0 z-50 h-screen w-72 transition-transform duration-300 ease-in-out ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >

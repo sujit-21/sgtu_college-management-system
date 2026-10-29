@@ -12,14 +12,21 @@ export const DashboardLayout = () => {
   const getPageTitle = () => {
     const p = location.pathname;
     if (p.includes('/dashboard')) return 'Dashboard Overview';
-    if (p.includes('/students')) return 'Student Directory';
-    if (p.includes('/teachers')) return 'Faculty & Staff';
+    if (p.includes('/students')) return 'Student Directory & Admissions';
+    if (p.includes('/teachers')) return 'Faculty & Staff Directory';
     if (p.includes('/academic-structure')) return 'Departments & Courses';
+    if (p.includes('/timetable')) return 'Class Timetable & Schedule';
     if (p.includes('/attendance')) return 'Attendance Management';
     if (p.includes('/assignments')) return 'Coursework & Assignments';
     if (p.includes('/examinations')) return 'Examinations & Results';
     if (p.includes('/fees')) return 'Fee Management & Invoices';
+    if (p.includes('/payroll')) return 'Faculty Payroll & Salaries';
+    if (p.includes('/certificates')) return 'ID Cards & Certificates';
     if (p.includes('/library')) return 'Library & Knowledge Center';
+    if (p.includes('/hostel')) return 'Hostel & Residential Accommodation';
+    if (p.includes('/transport')) return 'Campus Transport & Bus Fleet';
+    if (p.includes('/placement')) return 'Training & Placement Cell (T&P)';
+    if (p.includes('/leave-grievance')) return 'Leaves & Grievance Helpdesk';
     if (p.includes('/announcements')) return 'Campus Announcements';
     if (p.includes('/profile')) return 'Personal Student Profile';
     return 'University Portal';
@@ -27,7 +34,7 @@ export const DashboardLayout = () => {
 
   return (
     <div className="min-h-screen flex bg-page dark:bg-navy-950 text-slate-900 dark:text-slate-100 transition-colors">
-      {/* Sidebar */}
+      {/* Persistent Sidebar in Document Flow */}
       <AppSidebar
         isCollapsed={isCollapsed}
         toggleSidebar={() => setIsCollapsed(!isCollapsed)}
@@ -35,7 +42,7 @@ export const DashboardLayout = () => {
         closeMobileSidebar={() => setIsMobileOpen(false)}
       />
 
-      {/* Main Container */}
+      {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <TopNavbar
           openMobileSidebar={() => setIsMobileOpen(true)}
@@ -49,3 +56,5 @@ export const DashboardLayout = () => {
     </div>
   );
 };
+
+export default DashboardLayout;
