@@ -21,6 +21,10 @@ import {
   BookOpen,
   DollarSign,
   UserX,
+  Download,
+  UploadCloud,
+  FileSpreadsheet,
+  Check,
 } from 'lucide-react';
 import api from '../../services/api';
 import { PageHeader } from '../../components/layout/PageHeader';
@@ -49,6 +53,10 @@ export const UserManagement = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [isCsvModalOpen, setIsCsvModalOpen] = useState(false);
+  const [csvText, setCsvText] = useState('');
+  const [csvLoading, setCsvLoading] = useState(false);
+  const [csvReport, setCsvReport] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
 
   // Password visibility
@@ -228,6 +236,85 @@ export const UserManagement = () => {
     }
   };
 
+  const exportUsersCSV = () => {
+    const headers = ['College ID', 'Full Name', 'Email', 'Role', 'Phone', 'Status', 'Created Date'];
+    const rows = users.map((u) => [
+      u.collegeId,
+      `"${u.fullName || ''}"`,
+      u.email,
+      u.role,
+      u.phone || '',
+      u.isActive ? 'Active' : 'Deactivated',
+      u.createdAt ? new Date(u.createdAt).toISOString().split('T')[0] : '',
+    ]);
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((e) => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `SGTU_Users_Credentials_Export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const loadSampleCSV = () => {
+    const sample = `collegeId,fullName,email,role,phone,password
+SGTU2026CS101,Rohan Mehta,rohan.mehta@sgtu.edu,STUDENT,+91 98765 12001,Sgtu@Pass123
+SGTU2026CS102,Ananya Sen,ananya.sen@sgtu.edu,STUDENT,+91 98765 12002,Sgtu@Pass123
+EMP-FAC-ME-05,Dr. Alok Verma,alok.verma@sgtu.edu,TEACHER,+91 98765 12003,Sgtu@Pass123`;
+    setCsvText(sample);
+  };
+
+  const handleImportCSV = async () => {
+    if (!csvText.trim()) return;
+    setCsvLoading(true);
+    setCsvReport(null);
+
+    const lines = csvText.trim().split('\n');
+    let successCount = 0;
+    let failCount = 0;
+    const errors = [];
+
+    const startIdx = lines[0].toLowerCase().includes('collegeid') ? 1 : 0;
+
+    for (let i = startIdx; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      const parts = line.split(',').map((p) => p.trim().replace(/^"|"$/g, ''));
+      const [collegeId, fullName, email, role, phone, password] = parts;
+
+      if (!collegeId || !email) {
+        failCount++;
+        errors.push(`Line ${i + 1}: Missing College ID or Email`);
+        continue;
+      }
+
+      try {
+        await api.post('/users', {
+          collegeId,
+          fullName: fullName || 'University Member',
+          email,
+          role: role ? role.toUpperCase() : 'STUDENT',
+          phone: phone || '+91 98765 00000',
+          password: password || 'Sgtu@Secure2026',
+          departmentId: departments[0]?._id || '',
+        });
+        successCount++;
+      } catch (err) {
+        failCount++;
+        errors.push(`${collegeId} (${email}): ${err.response?.data?.message || 'Failed'}`);
+      }
+    }
+
+    setCsvReport({ successCount, failCount, errors });
+    setCsvLoading(false);
+    if (successCount > 0) {
+      setNotification(`Bulk import completed: ${successCount} users created in directory!`);
+      fetchUsers();
+    }
+  };
+
   const getRoleBadge = (role) => {
     switch (role) {
       case 'SUPER_ADMIN':
@@ -251,18 +338,40 @@ export const UserManagement = () => {
     <div className="space-y-6">
       {/* Page Header */}
       <PageHeader
-        title="User Credentials &amp; Access Control"
+        title="User Credentials & Access Control"
         subtitle="Assign unique College IDs, set login passwords, manage university roles, and govern active credentials across all departments."
       >
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="outline"
             onClick={fetchUsers}
-            className="flex items-center gap-1.5 border-slate-300 dark:border-navy-700"
+            className="flex items-center gap-1.5 border-slate-300 dark:border-navy-700 text-xs"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
+
+          <Button
+            variant="outline"
+            onClick={exportUsersCSV}
+            className="flex items-center gap-1.5 border-slate-300 dark:border-navy-700 text-xs"
+          >
+            <Download className="w-4 h-4" />
+            Export CSV
+          </Button>
+
+          <Button
+            variant="outline"
+            onClick={() => {
+              setCsvReport(null);
+              setIsCsvModalOpen(true);
+            }}
+            className="flex items-center gap-1.5 border-slate-300 dark:border-navy-700 text-xs"
+          >
+            <UploadCloud className="w-4 h-4" />
+            Bulk Import CSV
+          </Button>
+
           <Button
             onClick={() => {
               setCreateForm({
@@ -272,7 +381,7 @@ export const UserManagement = () => {
               });
               setIsCreateOpen(true);
             }}
-            className="bg-primary hover:bg-primary-600 text-white flex items-center gap-2 shadow-sm"
+            className="bg-primary hover:bg-primary-600 text-white flex items-center gap-2 shadow-sm text-xs"
           >
             <Plus className="w-4 h-4" />
             Assign New ID &amp; Password
@@ -847,6 +956,92 @@ export const UserManagement = () => {
               </Button>
             </div>
           </form>
+        </Modal>
+      )}
+
+      {/* BULK CSV IMPORT MODAL */}
+      {isCsvModalOpen && (
+        <Modal
+          isOpen={isCsvModalOpen}
+          onClose={() => setIsCsvModalOpen(false)}
+          title="Bulk Import User Accounts (CSV)"
+          subtitle="Quickly provision batches of students, faculty, or staff accounts into the university directory."
+        >
+          <div className="space-y-4 text-xs">
+            <div className="p-3.5 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-xl space-y-1">
+              <div className="font-bold text-slate-800 dark:text-slate-200">
+                Expected CSV Format (Comma Separated):
+              </div>
+              <code className="text-[11px] font-mono text-brand-600 dark:text-brand-400 block bg-white dark:bg-navy-900 p-2 rounded-lg border border-slate-200 dark:border-navy-800">
+                collegeId,fullName,email,role,phone,password
+              </code>
+              <p className="text-[10px] text-slate-400">
+                Supported Roles: STUDENT, TEACHER, HOD, LIBRARIAN, ACCOUNTANT
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <label className="font-semibold text-slate-700 dark:text-slate-300">
+                Paste CSV Data or Load Demo Template:
+              </label>
+              <button
+                type="button"
+                onClick={loadSampleCSV}
+                className="text-[11px] font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Load Sample CSV Rows</span>
+              </button>
+            </div>
+
+            <textarea
+              rows={6}
+              value={csvText}
+              onChange={(e) => setCsvText(e.target.value)}
+              placeholder="collegeId,fullName,email,role,phone,password&#10;SGTU2026CS101,Rohan Mehta,rohan.mehta@sgtu.edu,STUDENT,+91 98765 12001,Sgtu@Pass123"
+              className="w-full p-3 bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 rounded-xl font-mono text-xs focus:ring-2 focus:ring-brand-500 outline-hidden"
+            />
+
+            {csvReport && (
+              <div
+                className={`p-3 rounded-xl border text-xs space-y-1 ${
+                  csvReport.successCount > 0
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 text-emerald-800 dark:text-emerald-200'
+                    : 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 text-rose-800 dark:text-rose-200'
+                }`}
+              >
+                <div className="font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  <span>
+                    Import Summary: {csvReport.successCount} Created, {csvReport.failCount} Skipped
+                  </span>
+                </div>
+                {csvReport.errors.length > 0 && (
+                  <div className="text-[10px] text-rose-600 dark:text-rose-400 max-h-20 overflow-y-auto pl-2 border-l-2 border-rose-300">
+                    {csvReport.errors.map((err, i) => (
+                      <div key={i}>{err}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-navy-800">
+              <Button type="button" variant="outline" onClick={() => setIsCsvModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleImportCSV}
+                isLoading={csvLoading}
+                disabled={!csvText.trim()}
+                icon={UploadCloud}
+                className="bg-primary hover:bg-primary-600 text-white"
+              >
+                Import Users into Directory
+              </Button>
+            </div>
+          </div>
         </Modal>
       )}
     </div>

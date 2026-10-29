@@ -12,6 +12,14 @@ import {
   MapPin,
   Clock,
   Layers,
+  FileText,
+  Link,
+  Github,
+  Linkedin,
+  AlertTriangle,
+  Check,
+  Send,
+  X
 } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -33,8 +41,23 @@ export const PlacementPage = () => {
   });
   const [loading, setLoading] = useState(true);
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [applyingId, setApplyingId] = useState(null);
+  const [applyingDrive, setApplyingDrive] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [appliedDriveIds, setAppliedDriveIds] = useState(new Set());
+  const [applicationSuccess, setApplicationSuccess] = useState('');
+
+  // Student Profile Context (Candidate CGPA default 8.2 for enrolled scholars)
+  const candidateCgpa = 8.2;
+  const candidateBacklogs = 0;
+
+  // Application Modal Form
+  const [appForm, setAppForm] = useState({
+    resumeUrl: 'https://sgtu.edu/transcripts/verify/SGTU2024CS001.pdf',
+    portfolioUrl: 'https://github.com/aarav-sharma-tech',
+    linkedinUrl: 'https://linkedin.com/in/aarav-sharma-sgtu',
+    keySkills: 'React, Node.js, Python, PyTorch, Distributed Systems',
+    coverNote: 'Excited to contribute to software infrastructure and engineering teams.',
+  });
 
   const initialForm = {
     companyName: '',
@@ -44,7 +67,7 @@ export const PlacementPage = () => {
     driveDate: '',
     deadline: '',
     location: 'Tech Auditorium / Hybrid',
-    rounds: 'Coding Assessment -> Technical -> HR',
+    rounds: 'Online Coding -> Technical Interview -> HR Round',
     status: 'ACTIVE',
   };
   const [formData, setFormData] = useState(initialForm);
@@ -68,18 +91,27 @@ export const PlacementPage = () => {
     fetchDrives();
   }, []);
 
-  const handleApply = async (driveId) => {
-    setApplyingId(driveId);
+  const openApplyModal = (drive) => {
+    setApplyingDrive(drive);
+  };
+
+  const handleConfirmApply = async (e) => {
+    e.preventDefault();
+    if (!applyingDrive) return;
+    setActionLoading(true);
     try {
-      const res = await api.post(`/placement/${driveId}/apply`);
+      const res = await api.post(`/placement/${applyingDrive._id}/apply`, appForm);
       if (res.data.success) {
-        alert('Application submitted! Your resume & academic transcript sent to company HR.');
+        setAppliedDriveIds((prev) => new Set([...prev, applyingDrive._id]));
+        setApplicationSuccess(`Application submitted to ${applyingDrive.companyName}! Your resume and university transcript have been dispatched.`);
+        setApplyingDrive(null);
         fetchDrives();
+        setTimeout(() => setApplicationSuccess(''), 5000);
       }
     } catch (e) {
       alert(e.response?.data?.message || 'Failed to submit application.');
     } finally {
-      setApplyingId(null);
+      setActionLoading(false);
     }
   };
 
@@ -110,7 +142,7 @@ export const PlacementPage = () => {
     <div className="space-y-6">
       <PageHeader
         title="Training & Placement Cell (T&P)"
-        description="Campus corporate recruitment drives, internship offers, eligibility criteria, and student job applications."
+        description="Campus corporate recruitment drives, internship offers, real-time CGPA eligibility verification, and student job applications."
       >
         {isAdmin && (
           <Button
@@ -164,110 +196,263 @@ export const PlacementPage = () => {
           <h3 className="text-xl font-black text-slate-900 dark:text-white">
             {stats.avgPackage}
           </h3>
-          <p className="text-[11px] text-slate-400 mt-1">Across Engineering & Tech</p>
+          <p className="text-[11px] text-indigo-600 font-semibold mt-1">Tier-1 Corporate Offers</p>
         </div>
 
         <div className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-soft">
           <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
-            <span>Total Campus Offers</span>
-            <div className="p-2 rounded-xl bg-purple-50 dark:bg-purple-950/60 text-purple-600">
+            <span>Corporate Recruitment Drives</span>
+            <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600">
               <Briefcase className="w-4 h-4" />
             </div>
           </div>
           <h3 className="text-xl font-black text-slate-900 dark:text-white">
-            {stats.totalOffers} Letters Released
+            {drives.length} Drives
           </h3>
-          <p className="text-[11px] text-purple-600 font-semibold mt-1">Top Tier 1 Corporates</p>
+          <p className="text-[11px] text-amber-600 font-semibold mt-1">
+            {stats.totalOffers} Total Offers Extended
+          </p>
         </div>
       </div>
 
-      {/* Drives Grid */}
-      {loading ? (
-        <div className="py-20 text-center text-xs text-slate-400">Loading placement recruitment drives...</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {drives.map((drive) => (
-            <div
-              key={drive._id}
-              className="p-6 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-soft space-y-5 flex flex-col justify-between"
-            >
-              <div>
-                <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100 dark:border-navy-800">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-slate-50 dark:bg-navy-950 p-2 flex items-center justify-center border border-slate-200 dark:border-navy-800 shrink-0">
-                      <Building2 className="w-6 h-6 text-brand-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-extrabold text-base text-slate-900 dark:text-white leading-tight">
-                        {drive.companyName}
-                      </h4>
-                      <p className="text-xs font-semibold text-brand-600 dark:text-brand-400 mt-0.5">
-                        {drive.role}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="text-right">
-                    <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-xl border border-emerald-200 dark:border-emerald-800">
-                      ₹{drive.packageLpa} LPA
-                    </span>
-                    <span className="text-[9px] text-slate-400 block mt-1 font-semibold">
-                      Full-time CTC
-                    </span>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 py-3 text-xs">
-                  <div>
-                    <span className="text-[10px] text-slate-400 block">Eligibility:</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">
-                      Min CGPA: {drive.eligibilityMinCgpa}
-                    </span>
-                    <span className="text-[10px] text-slate-400 block mt-0.5">
-                      0 Active Backlogs
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="text-[10px] text-slate-400 block">Drive Schedule:</span>
-                    <div className="flex items-center gap-1 font-semibold text-slate-800 dark:text-slate-200">
-                      <Calendar className="w-3.5 h-3.5 text-brand-500" />
-                      <span>{drive.driveDate}</span>
-                    </div>
-                    <span className="text-[10px] text-red-500 block">
-                      Deadline: {drive.deadline || 'Closing Soon'}
-                    </span>
-                  </div>
-                </div>
-
-                {drive.rounds && (
-                  <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-navy-800 text-[11px] text-slate-600 dark:text-slate-300">
-                    <span className="font-bold text-slate-400 block text-[9px] uppercase tracking-wider mb-0.5">
-                      Recruitment Process:
-                    </span>
-                    {drive.rounds}
-                  </div>
-                )}
-              </div>
-
-              <div className="pt-3 border-t border-slate-100 dark:border-navy-800 flex items-center justify-between text-xs">
-                <span className="text-slate-500 font-mono text-[11px]">
-                  <strong>{drive.appliedCount || 0}</strong> Students Applied
-                </span>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => handleApply(drive._id)}
-                  isLoading={applyingId === drive._id}
-                  icon={ArrowUpRight}
-                >
-                  Apply Now
-                </Button>
-              </div>
-            </div>
-          ))}
+      {applicationSuccess && (
+        <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-300 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-200 flex items-center justify-between">
+          <div className="flex items-center gap-2 font-semibold">
+            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+            <span>{applicationSuccess}</span>
+          </div>
+          <button onClick={() => setApplicationSuccess('')} className="text-emerald-500 hover:text-emerald-700">
+            <X className="w-4 h-4" />
+          </button>
         </div>
       )}
+
+      {/* Drives Grid */}
+      {loading ? (
+        <div className="py-20 text-center text-xs text-slate-400">Loading placement drives...</div>
+      ) : drives.length === 0 ? (
+        <div className="py-20 text-center text-xs text-slate-400">
+          No active recruitment drives scheduled currently.
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {drives.map((drive) => {
+            const minCgpa = drive.eligibilityMinCgpa || 7.0;
+            const isEligible = candidateCgpa >= minCgpa && candidateBacklogs === 0;
+            const hasApplied = appliedDriveIds.has(drive._id);
+
+            return (
+              <div
+                key={drive._id}
+                className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-soft flex flex-col justify-between space-y-4 hover:border-brand-500/50 transition-colors"
+              >
+                <div className="space-y-3">
+                  {/* Top Bar */}
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-10 h-10 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center font-black text-sm border border-brand-200 dark:border-brand-800">
+                        {drive.companyName.charAt(0)}
+                      </div>
+                      <div>
+                        <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
+                          {drive.companyName}
+                        </h4>
+                        <span className="text-[11px] text-brand-600 dark:text-brand-400 font-semibold block">
+                          {drive.role}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="inline-block px-2.5 py-1 rounded-full text-xs font-black bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 border border-emerald-200 dark:border-emerald-800">
+                        {drive.packageLpa} LPA
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* AUTO-ELIGIBILITY VERIFICATION BADGE */}
+                  <div
+                    className={`p-2.5 rounded-xl border flex items-center justify-between text-xs ${
+                      isEligible
+                        ? 'bg-emerald-50/70 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
+                        : 'bg-rose-50/70 dark:bg-rose-950/30 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-1.5 font-bold">
+                      {isEligible ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      ) : (
+                        <AlertTriangle className="w-3.5 h-3.5 text-rose-600 shrink-0" />
+                      )}
+                      <span>
+                        {isEligible ? 'Eligible to Apply' : 'Cutoff Not Met'}
+                      </span>
+                    </div>
+                    <span className="font-mono text-[11px] font-semibold">
+                      Req: {minCgpa} CGPA (Yours: {candidateCgpa})
+                    </span>
+                  </div>
+
+                  {/* Details Grid */}
+                  <div className="space-y-1.5 text-xs text-slate-500">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Drive Date: {new Date(drive.driveDate).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Deadline: {new Date(drive.deadline).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                      <span>{drive.location || 'SGTU Campus Auditorium'}</span>
+                    </div>
+                  </div>
+
+                  {drive.rounds && (
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-100 dark:border-navy-800 text-[11px] text-slate-600 dark:text-slate-300">
+                      <span className="font-bold text-slate-400 block text-[9px] uppercase tracking-wider mb-0.5">
+                        Recruitment Process:
+                      </span>
+                      {drive.rounds}
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer Action */}
+                <div className="pt-3 border-t border-slate-100 dark:border-navy-800 flex items-center justify-between text-xs">
+                  <span className="text-slate-500 font-mono text-[11px]">
+                    <strong>{drive.appliedCount || 0}</strong> Applied
+                  </span>
+
+                  {hasApplied ? (
+                    <span className="px-3 py-1.5 rounded-xl bg-emerald-500 text-white font-bold text-xs inline-flex items-center gap-1 shadow-xs">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Applied</span>
+                    </span>
+                  ) : isEligible ? (
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => openApplyModal(drive)}
+                      icon={ArrowUpRight}
+                    >
+                      Apply Now
+                    </Button>
+                  ) : (
+                    <button
+                      disabled
+                      className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-navy-800 text-slate-400 text-xs font-semibold cursor-not-allowed"
+                    >
+                      Ineligible (&lt; {minCgpa} CGPA)
+                    </button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* JOB APPLICATION SUBMISSION MODAL */}
+      <Modal
+        isOpen={!!applyingDrive}
+        onClose={() => setApplyingDrive(null)}
+        title={`Apply for ${applyingDrive?.companyName}`}
+        subtitle={`Role: ${applyingDrive?.role} • Package: ${applyingDrive?.packageLpa} LPA`}
+      >
+        <form onSubmit={handleConfirmApply} className="space-y-4 text-xs">
+          {/* Candidate Summary Strip */}
+          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 flex items-center justify-between">
+            <div>
+              <span className="text-[10px] text-slate-400 block uppercase font-bold">Applicant</span>
+              <span className="font-bold text-slate-900 dark:text-white">
+                {user?.name || 'Aarav Sharma'} (SGTU2024CS001)
+              </span>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] text-slate-400 block uppercase font-bold">Verified Academic Standing</span>
+              <span className="font-bold text-emerald-600 font-mono">
+                {candidateCgpa} CGPA • 0 Backlogs
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
+              <FileText className="w-3.5 h-3.5 text-brand-500" />
+              <span>Resume / Academic Transcript Link *</span>
+            </label>
+            <input
+              type="url"
+              required
+              value={appForm.resumeUrl}
+              onChange={(e) => setAppForm({ ...appForm, resumeUrl: e.target.value })}
+              placeholder="https://drive.google.com/your-resume.pdf"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-xl font-mono text-[11px]"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
+                <Github className="w-3.5 h-3.5 text-slate-500" />
+                <span>GitHub / Portfolio URL</span>
+              </label>
+              <input
+                type="url"
+                value={appForm.portfolioUrl}
+                onChange={(e) => setAppForm({ ...appForm, portfolioUrl: e.target.value })}
+                placeholder="https://github.com/..."
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-xl font-mono text-[11px]"
+              />
+            </div>
+
+            <div>
+              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
+                <Linkedin className="w-3.5 h-3.5 text-blue-500" />
+                <span>LinkedIn Profile URL</span>
+              </label>
+              <input
+                type="url"
+                value={appForm.linkedinUrl}
+                onChange={(e) => setAppForm({ ...appForm, linkedinUrl: e.target.value })}
+                placeholder="https://linkedin.com/in/..."
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-xl font-mono text-[11px]"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Key Technical Proficiencies
+            </label>
+            <input
+              type="text"
+              value={appForm.keySkills}
+              onChange={(e) => setAppForm({ ...appForm, keySkills: e.target.value })}
+              placeholder="e.g. React, C++, Machine Learning, Docker, SQL"
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-xl"
+            />
+          </div>
+
+          <div className="p-3 bg-brand-50 dark:bg-brand-950/40 rounded-xl text-[11px] text-brand-700 dark:text-brand-300 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 shrink-0 text-brand-500" />
+            <span>
+              By clicking Submit, your official verified SGTU academic transcripts and resume will be securely forwarded to the recruitment portal of {applyingDrive?.companyName}.
+            </span>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-navy-800">
+            <Button variant="secondary" type="button" onClick={() => setApplyingDrive(null)}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit" isLoading={actionLoading} icon={Send}>
+              Confirm & Submit Application
+            </Button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Add Drive Modal */}
       <Modal
@@ -365,23 +550,34 @@ export const PlacementPage = () => {
 
           <div>
             <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Interview & Evaluation Format
+              Venue / Mode
+            </label>
+            <input
+              type="text"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              className="w-full px-3 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-xl"
+            />
+          </div>
+
+          <div>
+            <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              Interview Rounds Pipeline
             </label>
             <input
               type="text"
               value={formData.rounds}
               onChange={(e) => setFormData({ ...formData, rounds: e.target.value })}
-              placeholder="e.g. Online Hackathon -> Tech Rounds -> HR"
               className="w-full px-3 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-xl"
             />
           </div>
 
-          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-navy-800">
+          <div className="flex justify-end gap-2 pt-4 border-t border-slate-100 dark:border-navy-800">
             <Button variant="secondary" type="button" onClick={() => setIsAddOpen(false)}>
               Cancel
             </Button>
             <Button variant="primary" type="submit" isLoading={actionLoading}>
-              Publish Drive
+              Schedule Drive
             </Button>
           </div>
         </form>
@@ -389,4 +585,5 @@ export const PlacementPage = () => {
     </div>
   );
 };
+
 export default PlacementPage;
