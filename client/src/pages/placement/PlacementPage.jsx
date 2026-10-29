@@ -379,7 +379,7 @@ export const PlacementPage = () => {
           </div>
 
           <div>
-            <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
+            <label className="font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
               <FileText className="w-3.5 h-3.5 text-brand-500" />
               <span>Resume / Academic Transcript Link *</span>
             </label>
@@ -395,7 +395,7 @@ export const PlacementPage = () => {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
+              <label className="font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
                 <Github className="w-3.5 h-3.5 text-slate-500" />
                 <span>GitHub / Portfolio URL</span>
               </label>
@@ -409,7 +409,7 @@ export const PlacementPage = () => {
             </div>
 
             <div>
-              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
+              <label className="font-semibold text-slate-700 dark:text-slate-300 mb-1 flex items-center gap-1">
                 <Linkedin className="w-3.5 h-3.5 text-blue-500" />
                 <span>LinkedIn Profile URL</span>
               </label>
