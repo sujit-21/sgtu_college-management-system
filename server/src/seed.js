@@ -29,6 +29,7 @@ import {
   PlacementDrive,
   LeaveApplication,
   CampusGrievance,
+  QuestionPaper,
 } from './models/index.js';
 
 dotenv.config();
@@ -41,6 +42,7 @@ async function seed() {
 
   // Clear existing collections
   await Promise.all([
+    QuestionPaper.deleteMany({}),
     CampusGrievance.deleteMany({}),
     LeaveApplication.deleteMany({}),
     PlacementDrive.deleteMany({}),
@@ -1211,6 +1213,353 @@ async function seed() {
     },
   ]);
   console.log('✅ Campus grievances seeded');
+
+  // 20. Question Papers (PYQ Archive)
+  await QuestionPaper.create([
+    {
+      departmentCode: 'CSE',
+      departmentName: 'Computer Science & Engineering',
+      courseCode: 'CS601',
+      courseName: 'Distributed Systems & Cloud Computing',
+      semester: 6,
+      subjectCode: 'CS601',
+      subjectName: 'Distributed Systems & Cloud Computing',
+      examType: 'END_SEM',
+      academicYear: '2024-25',
+      maxMarks: 100,
+      durationHours: 3,
+      hasAnswerKey: true,
+      fileUrl: '/docs/pyq/CSE_CS601_2024_25_EndSem.pdf',
+      fileSize: '1.8 MB',
+      downloadCount: 342,
+      uploadedBy: 'Prof. Rajesh Sharma (Exam Controller)',
+      instructions: 'Answer any FIVE full questions choosing one full question from each module. Non-programmable scientific calculators are permitted.',
+      sampleQuestions: [
+        {
+          sectionName: 'Module 1 - Architecture & Foundations',
+          marks: 20,
+          questionText: 'Explain the CAP Theorem in distributed databases with real-world examples. Distinguish between strict and eventual consistency models in Amazon DynamoDB.'
+        },
+        {
+          sectionName: 'Module 2 - Virtualization & Containers',
+          marks: 20,
+          questionText: 'Differentiate between Type-1 and Type-2 Hypervisors. Outline the internal architecture of Kubernetes Control Plane components including kube-apiserver, etcd, and kube-scheduler.'
+        },
+        {
+          sectionName: 'Module 3 - Consensus Algorithms',
+          marks: 20,
+          questionText: 'Demonstrate Raft leader election and log replication with step-by-step state diagrams during network partition failure scenarios.'
+        }
+      ]
+    },
+    {
+      departmentCode: 'CSE',
+      departmentName: 'Computer Science & Engineering',
+      courseCode: 'CS602',
+      courseName: 'Artificial Intelligence & Machine Learning',
+      semester: 6,
+      subjectCode: 'CS602',
+      subjectName: 'Artificial Intelligence & Machine Learning',
+      examType: 'END_SEM',
+      academicYear: '2024-25',
+      maxMarks: 100,
+      durationHours: 3,
+      hasAnswerKey: true,
+      fileUrl: '/docs/pyq/CSE_CS602_2024_25_EndSem.pdf',
+      fileSize: '2.1 MB',
+      downloadCount: 489,
+      uploadedBy: 'Dr. Anita Desai (HOD CSE)',
+      instructions: 'All questions in Section A are compulsory. Answer any FOUR questions from Section B.',
+      sampleQuestions: [
+        {
+          sectionName: 'Section A - Short Answer Questions',
+          marks: 20,
+          questionText: 'Explain Backpropagation through time (BPTT) and how LSTM cells alleviate vanishing gradients.'
+        },
+        {
+          sectionName: 'Section B - Problem Solving & Analysis',
+          marks: 40,
+          questionText: 'Given a dataset of student performance, derive the mathematical objective function for SVM with soft margins and explain the role of slack variables.'
+        }
+      ]
+    },
+    {
+      departmentCode: 'CSE',
+      departmentName: 'Computer Science & Engineering',
+      courseCode: 'CS401',
+      courseName: 'Design and Analysis of Algorithms',
+      semester: 4,
+      subjectCode: 'CS401',
+      subjectName: 'Design and Analysis of Algorithms',
+      examType: 'MID_TERM',
+      academicYear: '2025-26',
+      maxMarks: 50,
+      durationHours: 1.5,
+      hasAnswerKey: true,
+      fileUrl: '/docs/pyq/CSE_CS401_2025_26_MidTerm.pdf',
+      fileSize: '950 KB',
+      downloadCount: 215,
+      uploadedBy: 'Prof. Rajesh Sharma',
+      instructions: 'Answer all 3 questions. Total duration 90 minutes.',
+      sampleQuestions: [
+        {
+          sectionName: 'Section 1 - Recurrences & Divide-and-Conquer',
+          marks: 15,
+          questionText: 'Solve the recurrence relation T(n) = 3T(n/2) + O(n log n) using Master Theorem and verify using recursion tree method.'
+        },
+        {
+          sectionName: 'Section 2 - Dynamic Programming',
+          marks: 20,
+          questionText: 'Formulate the dynamic programming recurrence for 0/1 Knapsack. Analyze space complexity optimization from O(nW) to O(W).'
+        }
+      ]
+    },
+    {
+      departmentCode: 'CSE',
+      departmentName: 'Computer Science & Engineering',
+      courseCode: 'CS402',
+      courseName: 'Database Management Systems',
+      semester: 4,
+      subjectCode: 'CS402',
+      subjectName: 'Database Management Systems',
+      examType: 'END_SEM',
+      academicYear: '2023-24',
+      maxMarks: 100,
+      durationHours: 3,
+      hasAnswerKey: false,
+      fileUrl: '/docs/pyq/CSE_CS402_2023_24_EndSem.pdf',
+      fileSize: '1.4 MB',
+      downloadCount: 310,
+      uploadedBy: 'Academic Exam Cell',
+      instructions: 'Attempt any five questions. Diagrams must be neatly drawn.',
+      sampleQuestions: [
+        {
+          sectionName: 'Module 1 - Relational Algebra & Normalization',
+          marks: 25,
+          questionText: 'Define BCNF and 3NF. Given relation R(A, B, C, D, E) with functional dependencies {A -> BC, CD -> E, B -> D, E -> A}, find candidate keys and decompose into BCNF.'
+        },
+        {
+          sectionName: 'Module 2 - Transaction Management',
+          marks: 25,
+          questionText: 'Explain Two-Phase Locking (2PL) protocol and prove that strict 2PL prevents cascading rollbacks and guarantees serializability.'
+        }
+      ]
+    },
+    {
+      departmentCode: 'CSE',
+      departmentName: 'Computer Science & Engineering',
+      courseCode: 'CS801',
+      courseName: 'Cloud Computing & Cyber Security',
+      semester: 8,
+      subjectCode: 'CS801',
+      subjectName: 'Cloud Computing & Cyber Security',
+      examType: 'MODEL_PAPER',
+      academicYear: '2025-26',
+      maxMarks: 100,
+      durationHours: 3,
+      hasAnswerKey: true,
+      fileUrl: '/docs/pyq/CSE_CS801_2025_26_ModelPaper.pdf',
+      fileSize: '1.2 MB',
+      downloadCount: 178,
+      uploadedBy: 'Prof. Rajesh Sharma (Exam Controller)',
+      instructions: 'Model Paper issued by SGTU Academic Council for 2026 Graduating Batch.',
+      sampleQuestions: [
+        {
+          sectionName: 'Section A - Cryptography & Zero Trust',
+          marks: 30,
+          questionText: 'Explain the principles of Zero Trust Architecture (ZTA). Compare RSA asymmetric encryption with Elliptic Curve Cryptography (ECC) in quantum-resilient scenarios.'
+        }
+      ]
+    },
+    {
+      departmentCode: 'ECE',
+      departmentName: 'Electronics & Communication Engineering',
+      courseCode: 'EC601',
+      courseName: 'Digital Signal Processing & Microcontrollers',
+      semester: 6,
+      subjectCode: 'EC601',
+      subjectName: 'Digital Signal Processing',
+      examType: 'END_SEM',
+      academicYear: '2024-25',
+      maxMarks: 100,
+      durationHours: 3,
+      hasAnswerKey: true,
+      fileUrl: '/docs/pyq/ECE_EC601_2024_25_EndSem.pdf',
+      fileSize: '2.4 MB',
+      downloadCount: 260,
+      uploadedBy: 'Dr. Vivek Menon (ECE Dept)',
+      instructions: 'Use of standard Z-transform tables permitted. Answer FIVE questions.',
+      sampleQuestions: [
+        {
+          sectionName: 'Module 1 - Discrete Fourier Transform',
+          marks: 20,
+          questionText: 'Compute the 8-point DFT of the sequence x(n) = {1, 2, 0, 1, 0, 2, 1, 0} using Radix-2 Decimation-In-Time (DIT) FFT algorithm.'
+        },
+        {
+          sectionName: 'Module 2 - Digital Filter Design',
+          marks: 20,
+          questionText: 'Design a lowpass digital Butterworth filter using Bilinear Transformation Method with cutoff frequency 0.2pi rad/sec and sampling interval T = 1 sec.'
+        }
+      ]
+    },
+    {
+      departmentCode: 'ECE',
+      departmentName: 'Electronics & Communication Engineering',
+      courseCode: 'EC401',
+      courseName: 'Analog & Digital Communications',
+      semester: 4,
+      subjectCode: 'EC401',
+      subjectName: 'Analog Communications',
+      examType: 'MID_TERM',
+      academicYear: '2025-26',
+      maxMarks: 50,
+      durationHours: 1.5,
+      hasAnswerKey: false,
+      fileUrl: '/docs/pyq/ECE_EC401_2025_26_MidTerm.pdf',
+      fileSize: '820 KB',
+      downloadCount: 140,
+      uploadedBy: 'Dr. Vivek Menon',
+      instructions: 'Internal Assessment Examination. All questions compulsory.',
+      sampleQuestions: [
+        {
+          sectionName: 'Part A',
+          marks: 25,
+          questionText: 'Derive the modulation index and transmission bandwidth of frequency-modulated (FM) signals using Carson’s rule.'
+        }
+      ]
+    },
+    {
+      departmentCode: 'ME',
+      departmentName: 'Mechanical Engineering',
+      courseCode: 'ME601',
+      courseName: 'Applied Thermodynamics & Heat Transfer',
+      semester: 6,
+      subjectCode: 'ME601',
+      subjectName: 'Applied Thermodynamics',
+      examType: 'END_SEM',
+      academicYear: '2024-25',
+      maxMarks: 100,
+      durationHours: 3,
+      hasAnswerKey: true,
+      fileUrl: '/docs/pyq/ME_ME601_2024_25_EndSem.pdf',
+      fileSize: '3.1 MB',
+      downloadCount: 195,
+      uploadedBy: 'Prof. Harish Kulkarni (ME Dept)',
+      instructions: 'Use of Steam Tables and Mollier Charts is permitted. Answer FIVE questions.',
+      sampleQuestions: [
+        {
+          sectionName: 'Unit 1 - Rankine Cycle Analysis',
+          marks: 25,
+          questionText: 'A steam power plant operates on an ideal reheat Rankine cycle between 15 MPa and 10 kPa. The steam enters the high-pressure turbine at 500 deg C. Calculate thermal efficiency and net power output.'
+        }
+      ]
+    },
+    {
+      departmentCode: 'ME',
+      departmentName: 'Mechanical Engineering',
+      courseCode: 'ME401',
+      courseName: 'Fluid Mechanics & Hydraulic Machinery',
+      semester: 4,
+      subjectCode: 'ME401',
+      subjectName: 'Fluid Mechanics',
+      examType: 'END_SEM',
+      academicYear: '2023-24',
+      maxMarks: 100,
+      durationHours: 3,
+      hasAnswerKey: false,
+      fileUrl: '/docs/pyq/ME_ME401_2023_24_EndSem.pdf',
+      fileSize: '1.6 MB',
+      downloadCount: 220,
+      uploadedBy: 'Prof. Harish Kulkarni',
+      instructions: 'Draw neat sketches wherever necessary. Assume reasonable data if missing.',
+      sampleQuestions: [
+        {
+          sectionName: 'Section A - Navier-Stokes & Boundary Layer',
+          marks: 20,
+          questionText: 'State the assumptions and derive the Navier-Stokes equations for incompressible Newtonian laminar flow along an inclined flat plate.'
+        }
+      ]
+    },
+    {
+      departmentCode: 'Civil',
+      departmentName: 'Civil Engineering',
+      courseCode: 'CE601',
+      courseName: 'Structural Analysis & Design of RC Structures',
+      semester: 6,
+      subjectCode: 'CE601',
+      subjectName: 'Structural Analysis II',
+      examType: 'END_SEM',
+      academicYear: '2024-25',
+      maxMarks: 100,
+      durationHours: 3,
+      hasAnswerKey: true,
+      fileUrl: '/docs/pyq/Civil_CE601_2024_25_EndSem.pdf',
+      fileSize: '2.7 MB',
+      downloadCount: 180,
+      uploadedBy: 'Dr. Ramesh Chandra (Civil Dept)',
+      instructions: 'Use of IS 456:2000 code permitted. Answer ANY FIVE full questions.',
+      sampleQuestions: [
+        {
+          sectionName: 'Module 1 - Moment Distribution Method',
+          marks: 25,
+          questionText: 'Analyze the continuous beam ABC over supports A, B, and C with fixed ends subjected to uniformly distributed load 24 kN/m using Moment Distribution Method.'
+        }
+      ]
+    },
+    {
+      departmentCode: 'Civil',
+      departmentName: 'Civil Engineering',
+      courseCode: 'CE401',
+      courseName: 'Geotechnical Engineering & Soil Mechanics',
+      semester: 4,
+      subjectCode: 'CE401',
+      subjectName: 'Soil Mechanics',
+      examType: 'MID_TERM',
+      academicYear: '2025-26',
+      maxMarks: 50,
+      durationHours: 1.5,
+      hasAnswerKey: true,
+      fileUrl: '/docs/pyq/Civil_CE401_2025_26_MidTerm.pdf',
+      fileSize: '1.1 MB',
+      downloadCount: 165,
+      uploadedBy: 'Dr. Ramesh Chandra',
+      instructions: 'Answer all questions. Show step-by-step soil property calculations.',
+      sampleQuestions: [
+        {
+          sectionName: 'Part 1 - Shear Strength & Permeability',
+          marks: 25,
+          questionText: 'Explain the Mohr-Coulomb failure criterion for direct shear test on saturated cohesive soils. Calculate effective cohesion c and internal friction angle phi.'
+        }
+      ]
+    },
+    {
+      departmentCode: 'CSE',
+      departmentName: 'Computer Science & Engineering',
+      courseCode: 'CS701',
+      courseName: 'Advanced Web Architecture & DevOps',
+      semester: 7,
+      subjectCode: 'CS701',
+      subjectName: 'Advanced Web Architecture',
+      examType: 'SUPPLEMENTARY',
+      academicYear: '2023-24',
+      maxMarks: 100,
+      durationHours: 3,
+      hasAnswerKey: false,
+      fileUrl: '/docs/pyq/CSE_CS701_2023_24_Supple.pdf',
+      fileSize: '1.3 MB',
+      downloadCount: 142,
+      uploadedBy: 'Academic Exam Cell',
+      instructions: 'Supplementary Examination session January 2024.',
+      sampleQuestions: [
+        {
+          sectionName: 'Section 1 - Microservices & CI/CD',
+          marks: 30,
+          questionText: 'Compare Monolithic vs Microservices architecture. Design an automated CI/CD pipeline using GitHub Actions, Docker, and Kubernetes deployment strategies (Blue-Green and Canary).'
+        }
+      ]
+    }
+  ]);
+  console.log('✅ Previous year question papers (PYQ) seeded');
 
   // 13. Audit Logs
   await AuditLog.create({

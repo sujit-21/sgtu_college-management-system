@@ -24,6 +24,7 @@ import {
   Briefcase,
   FileText,
   LifeBuoy,
+  BookMarked,
 } from 'lucide-react';
 
 export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobileSidebar }) => {
@@ -50,6 +51,7 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
             { name: 'Attendance', path: '/attendance', icon: CalendarCheck },
             { name: 'Assignments', path: '/assignments', icon: FileSpreadsheet },
             { name: 'Exams & Results', path: '/examinations', icon: Award },
+            { name: 'Question Papers (PYQ)', path: '/question-papers', icon: BookMarked },
           ],
         },
         {
@@ -89,6 +91,7 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
             { name: 'Mark Attendance', path: '/attendance', icon: CalendarCheck },
             { name: 'Assignments & Grading', path: '/assignments', icon: FileSpreadsheet },
             { name: 'Marks & Results', path: '/examinations', icon: Award },
+            { name: 'Question Papers (PYQ)', path: '/question-papers', icon: BookMarked },
           ],
         },
         {
@@ -153,6 +156,7 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
           { name: 'Attendance Record', path: '/attendance', icon: CalendarCheck },
           { name: 'Coursework', path: '/assignments', icon: FileSpreadsheet },
           { name: 'Exams & Grades', path: '/examinations', icon: Award },
+          { name: 'Question Papers (PYQ)', path: '/question-papers', icon: BookMarked },
         ],
       },
       {

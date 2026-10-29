@@ -569,3 +569,54 @@ const campusGrievanceSchema = new Schema(
   { timestamps: true }
 );
 export const CampusGrievance = mongoose.models.CampusGrievance || model('CampusGrievance', campusGrievanceSchema);
+
+// 28. QuestionPaper (Previous Year Question Papers - PYQ)
+const questionPaperSchema = new Schema(
+  {
+    departmentCode: { type: String, required: true }, // e.g. "CSE", "ECE", "ME", "CIVIL"
+    departmentName: { type: String, default: 'Computer Science and Engineering' },
+    courseCode: { type: String, default: 'B.TECH-CSE' },
+    courseName: { type: String, default: 'Bachelor of Technology' },
+    semester: { type: Number, required: true, min: 1, max: 8 },
+    subjectCode: { type: String, required: true, uppercase: true, trim: true },
+    subjectName: { type: String, required: true, trim: true },
+    examType: {
+      type: String,
+      enum: [
+        'End-Semester Examination',
+        'Mid-Term Sessional',
+        'Supplementary / Backlog',
+        'Model University Paper',
+        'END_SEM',
+        'MID_TERM',
+        'SUPPLEMENTARY',
+        'MODEL_PAPER',
+      ],
+      default: 'End-Semester Examination',
+    },
+    academicYear: { type: String, required: true }, // e.g. "2025-26", "2024-25"
+    maxMarks: { type: Number, default: 100 },
+    durationHours: { type: Number, default: 3 },
+    hasAnswerKey: { type: Boolean, default: false },
+    fileUrl: { type: String, default: 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf' },
+    fileSize: { type: String, default: '1.2 MB' },
+    downloadCount: { type: Number, default: 0 },
+    uploadedBy: { type: String, default: 'Controller of Examinations' },
+    instructions: {
+      type: String,
+      default: 'Answer all questions from Section A (20 Marks). Answer any 4 questions from Section B (80 Marks). Use of non-programmable scientific calculator is permitted.',
+    },
+    sampleQuestions: [
+      {
+        section: { type: String, default: 'Section A (Compulsory)' },
+        sectionName: { type: String },
+        questionText: { type: String },
+        marks: { type: Number, default: 5 },
+      },
+    ],
+  },
+  { timestamps: true }
+);
+
+export const QuestionPaper = mongoose.models.QuestionPaper || model('QuestionPaper', questionPaperSchema);
+

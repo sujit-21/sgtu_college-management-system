@@ -19,6 +19,7 @@ export const DashboardLayout = () => {
     if (p.includes('/attendance')) return 'Attendance Management';
     if (p.includes('/assignments')) return 'Coursework & Assignments';
     if (p.includes('/examinations')) return 'Examinations & Results';
+    if (p.includes('/question-papers')) return 'Question Papers (PYQ) Archive';
     if (p.includes('/fees')) return 'Fee Management & Invoices';
     if (p.includes('/payroll')) return 'Faculty Payroll & Salaries';
     if (p.includes('/certificates')) return 'ID Cards & Certificates';

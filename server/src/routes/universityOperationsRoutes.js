@@ -9,6 +9,7 @@ import {
   CampusGrievance,
   TeacherProfile,
   StudentProfile,
+  QuestionPaper,
 } from '../models/index.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
@@ -367,6 +368,87 @@ router.patch('/leave-grievance/grievances/:id', authorize('ADMIN', 'SUPER_ADMIN'
   try {
     const grievance = await CampusGrievance.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json({ success: true, data: grievance });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ==========================================
+// 7. PREVIOUS YEAR QUESTION PAPERS (PYQ)
+// ==========================================
+router.get('/question-papers', async (req, res, next) => {
+  try {
+    const { departmentCode, semester, academicYear, examType, search, hasAnswerKey } = req.query;
+
+    const filter = {};
+    if (departmentCode && departmentCode !== 'All') filter.departmentCode = departmentCode;
+    if (semester && semester !== 'All') filter.semester = parseInt(semester, 10);
+    if (academicYear && academicYear !== 'All') filter.academicYear = academicYear;
+    if (examType && examType !== 'All') filter.examType = examType;
+    if (hasAnswerKey === 'true') filter.hasAnswerKey = true;
+
+    if (search && search.trim()) {
+      const q = search.trim();
+      filter.$or = [
+        { subjectName: { $regex: q, $options: 'i' } },
+        { subjectCode: { $regex: q, $options: 'i' } },
+        { departmentName: { $regex: q, $options: 'i' } },
+      ];
+    }
+
+    const papers = await QuestionPaper.find(filter).sort({ academicYear: -1, semester: 1, subjectCode: 1 });
+
+    const totalDownloads = papers.reduce((sum, p) => sum + (p.downloadCount || 0), 0);
+    const withSolutionsCount = papers.filter((p) => p.hasAnswerKey).length;
+
+    res.json({
+      success: true,
+      stats: {
+        totalPapers: papers.length,
+        totalDownloads,
+        withSolutionsCount,
+      },
+      data: papers,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/question-papers', authorize('ADMIN', 'SUPER_ADMIN', 'TEACHER'), async (req, res, next) => {
+  try {
+    const paper = await QuestionPaper.create(req.body);
+    res.status(201).json({ success: true, message: 'Question paper archived successfully.', data: paper });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post('/question-papers/:id/download', async (req, res, next) => {
+  try {
+    const paper = await QuestionPaper.findById(req.params.id);
+    if (!paper) {
+      return res.status(404).json({ success: false, message: 'Question paper not found.' });
+    }
+
+    paper.downloadCount = (paper.downloadCount || 0) + 1;
+    await paper.save();
+
+    res.json({
+      success: true,
+      message: 'Download initiated.',
+      downloadUrl: paper.fileUrl,
+      downloadCount: paper.downloadCount,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.delete('/question-papers/:id', authorize('ADMIN', 'SUPER_ADMIN'), async (req, res, next) => {
+  try {
+    await QuestionPaper.findByIdAndDelete(req.params.id);
+    res.json({ success: true, message: 'Question paper removed from repository.' });
   } catch (error) {
     next(error);
   }

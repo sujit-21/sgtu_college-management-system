@@ -28,6 +28,7 @@ import { HostelPage } from './pages/hostel/HostelPage';
 import { TransportPage } from './pages/transport/TransportPage';
 import { PlacementPage } from './pages/placement/PlacementPage';
 import { LeaveGrievancePage } from './pages/grievance/LeaveGrievancePage';
+import { QuestionPapersPage } from './pages/academics/QuestionPapersPage';
 
 export const App = () => {
   const { user } = useAuth();
@@ -133,6 +134,7 @@ export const App = () => {
         <Route path="/transport" element={<TransportPage />} />
         <Route path="/placement" element={<PlacementPage />} />
         <Route path="/leave-grievance" element={<LeaveGrievancePage />} />
+        <Route path="/question-papers" element={<QuestionPapersPage />} />
       </Route>
 
       {/* Catch-all 404 */}
