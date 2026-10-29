@@ -29,7 +29,11 @@ import { DashboardStatCard } from '../../components/ui/DashboardStatCard';
 export const LibraryPage = () => {
   const { user } = useAuth();
   const isAdminOrTeacher =
-    user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'TEACHER';
+    user?.role === 'ADMIN' ||
+    user?.role === 'SUPER_ADMIN' ||
+    user?.role === 'LIBRARIAN' ||
+    user?.role === 'TEACHER' ||
+    user?.role === 'HOD';
   const isStudent = user?.role === 'STUDENT';
 
   // Active Tab
