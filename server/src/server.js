@@ -116,4 +116,13 @@ server.on('error', (err) => {
   }
 });
 
+const gracefulShutdown = (signal) => {
+  server.close(() => {
+    process.exit(0);
+  });
+};
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
 export default app;
