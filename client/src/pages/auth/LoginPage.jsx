@@ -36,6 +36,8 @@ export const LoginPage = () => {
       // Redirect based on role
       if (role === 'STUDENT') navigate('/student/dashboard');
       else if (role === 'TEACHER') navigate('/teacher/dashboard');
+      else if (role === 'HOD') navigate('/hod/dashboard');
+      else if (role === 'LIBRARIAN') navigate('/librarian/dashboard');
       else navigate('/admin/dashboard');
     } catch (err) {
       setError(
@@ -233,41 +235,59 @@ export const LoginPage = () => {
               <span>One-Click Demo Credentials</span>
               <span className="text-[10px] text-brand-600 font-semibold lowercase">click to autofill</span>
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
               <button
                 type="button"
                 onClick={() => handleQuickFill('admin@sgtu.edu', 'Admin@123')}
-                className="p-2.5 rounded-xl bg-slate-50 dark:bg-navy-900 hover:bg-brand-50 dark:hover:bg-brand-950/40 border border-slate-200 dark:border-navy-800 text-left transition-all hover:border-brand-300"
+                className="p-2 rounded-xl bg-slate-50 dark:bg-navy-900 hover:bg-brand-50 dark:hover:bg-brand-950/40 border border-slate-200 dark:border-navy-800 text-left transition-all hover:border-brand-300"
               >
-                <div className="font-bold text-slate-800 dark:text-slate-200">Admin</div>
-                <div className="text-[10px] text-slate-400 font-mono">admin@sgtu.edu</div>
+                <div className="font-bold text-slate-800 dark:text-slate-200 text-xs">Admin</div>
+                <div className="text-[10px] text-slate-400 font-mono truncate">admin@sgtu.edu</div>
               </button>
 
               <button
                 type="button"
-                onClick={() => handleQuickFill('prof.sharma@sgtu.edu', 'Teacher@123')}
-                className="p-2.5 rounded-xl bg-slate-50 dark:bg-navy-900 hover:bg-brand-50 dark:hover:bg-brand-950/40 border border-slate-200 dark:border-navy-800 text-left transition-all hover:border-brand-300"
+                onClick={() => handleQuickFill('hod.cse@sgtu.edu', 'Hod@123')}
+                className="p-2 rounded-xl bg-slate-50 dark:bg-navy-900 hover:bg-brand-50 dark:hover:bg-brand-950/40 border border-slate-200 dark:border-navy-800 text-left transition-all hover:border-brand-300"
               >
-                <div className="font-bold text-slate-800 dark:text-slate-200">Faculty (HOD)</div>
-                <div className="text-[10px] text-slate-400 font-mono">prof.sharma@sgtu.edu</div>
+                <div className="font-bold text-slate-800 dark:text-slate-200 text-xs">HOD (CSE)</div>
+                <div className="text-[10px] text-slate-400 font-mono truncate">hod.cse@sgtu.edu</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickFill('librarian@sgtu.edu', 'Librarian@123')}
+                className="p-2 rounded-xl bg-slate-50 dark:bg-navy-900 hover:bg-brand-50 dark:hover:bg-brand-950/40 border border-slate-200 dark:border-navy-800 text-left transition-all hover:border-brand-300"
+              >
+                <div className="font-bold text-slate-800 dark:text-slate-200 text-xs">Librarian</div>
+                <div className="text-[10px] text-slate-400 font-mono truncate">librarian@sgtu.edu</div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleQuickFill('dr.patel@sgtu.edu', 'Teacher@123')}
+                className="p-2 rounded-xl bg-slate-50 dark:bg-navy-900 hover:bg-brand-50 dark:hover:bg-brand-950/40 border border-slate-200 dark:border-navy-800 text-left transition-all hover:border-brand-300"
+              >
+                <div className="font-bold text-slate-800 dark:text-slate-200 text-xs">Faculty</div>
+                <div className="text-[10px] text-slate-400 font-mono truncate">dr.patel@sgtu.edu</div>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleQuickFill('arjun.kumar@sgtu.edu', 'Student@123')}
-                className="p-2.5 rounded-xl bg-slate-50 dark:bg-navy-900 hover:bg-brand-50 dark:hover:bg-brand-950/40 border border-slate-200 dark:border-navy-800 text-left transition-all hover:border-brand-300"
+                className="p-2 rounded-xl bg-slate-50 dark:bg-navy-900 hover:bg-brand-50 dark:hover:bg-brand-950/40 border border-slate-200 dark:border-navy-800 text-left transition-all hover:border-brand-300"
               >
-                <div className="font-bold text-slate-800 dark:text-slate-200">Student (Arjun)</div>
-                <div className="text-[10px] text-slate-400 font-mono">arjun.kumar@sgtu.edu</div>
+                <div className="font-bold text-slate-800 dark:text-slate-200 text-xs">Student</div>
+                <div className="text-[10px] text-slate-400 font-mono truncate">arjun.kumar@sgtu.edu</div>
               </button>
 
               <button
                 type="button"
                 onClick={() => handleQuickFill('accountant@sgtu.edu', 'Accountant@123')}
-                className="p-2.5 rounded-xl bg-slate-50 dark:bg-navy-900 hover:bg-brand-50 dark:hover:bg-brand-950/40 border border-slate-200 dark:border-navy-800 text-left transition-all hover:border-brand-300"
+                className="p-2 rounded-xl bg-slate-50 dark:bg-navy-900 hover:bg-brand-50 dark:hover:bg-brand-950/40 border border-slate-200 dark:border-navy-800 text-left transition-all hover:border-brand-300"
               >
-                <div className="font-bold text-slate-800 dark:text-slate-200">Accountant</div>
-                <div className="text-[10px] text-slate-400 font-mono">accountant@sgtu.edu</div>
+                <div className="font-bold text-slate-800 dark:text-slate-200 text-xs">Accountant</div>
+                <div className="text-[10px] text-slate-400 font-mono truncate">accountant@sgtu.edu</div>
               </button>
             </div>
           </div>

@@ -29,6 +29,8 @@ import { TransportPage } from './pages/transport/TransportPage';
 import { PlacementPage } from './pages/placement/PlacementPage';
 import { LeaveGrievancePage } from './pages/grievance/LeaveGrievancePage';
 import { QuestionPapersPage } from './pages/academics/QuestionPapersPage';
+import { HodDashboard } from './pages/hod/HodDashboard';
+import { LibrarianDashboard } from './pages/librarian/LibrarianDashboard';
 
 export const App = () => {
   const { user } = useAuth();
@@ -38,6 +40,8 @@ export const App = () => {
     if (!user) return '/login';
     if (user.role === 'STUDENT') return '/student/dashboard';
     if (user.role === 'TEACHER') return '/teacher/dashboard';
+    if (user.role === 'HOD') return '/hod/dashboard';
+    if (user.role === 'LIBRARIAN') return '/librarian/dashboard';
     return '/admin/dashboard';
   };
 
@@ -94,8 +98,28 @@ export const App = () => {
         <Route
           path="/teacher/dashboard"
           element={
-            <ProtectedRoute allowedRoles={['TEACHER', 'ADMIN', 'SUPER_ADMIN']}>
+            <ProtectedRoute allowedRoles={['TEACHER', 'HOD', 'ADMIN', 'SUPER_ADMIN']}>
               <TeacherDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* HOD Leadership Route */}
+        <Route
+          path="/hod/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['HOD', 'ADMIN', 'SUPER_ADMIN']}>
+              <HodDashboard />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Librarian Operations Route */}
+        <Route
+          path="/librarian/dashboard"
+          element={
+            <ProtectedRoute allowedRoles={['LIBRARIAN', 'ADMIN', 'SUPER_ADMIN']}>
+              <LibrarianDashboard />
             </ProtectedRoute>
           }
         />

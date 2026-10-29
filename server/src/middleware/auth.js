@@ -43,7 +43,7 @@ export const authenticate = async (req, res, next) => {
         .populate('departmentId', 'name code')
         .populate('courseId', 'name code');
       req.studentProfile = studentProfile;
-    } else if (user.role === 'TEACHER') {
+    } else if (user.role === 'TEACHER' || user.role === 'HOD') {
       const teacherProfile = await TeacherProfile.findOne({ userId: user._id })
         .populate('departmentId', 'name code');
       req.teacherProfile = teacherProfile;

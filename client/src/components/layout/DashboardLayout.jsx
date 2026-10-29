@@ -11,6 +11,8 @@ export const DashboardLayout = () => {
   // Get human friendly title from path
   const getPageTitle = () => {
     const p = location.pathname;
+    if (p.includes('/hod/dashboard')) return 'Department Leadership & Faculty Governance (HOD)';
+    if (p.includes('/librarian/dashboard')) return 'Central Library & Circulation Portal';
     if (p.includes('/dashboard')) return 'Dashboard Overview';
     if (p.includes('/students')) return 'Student Directory & Admissions';
     if (p.includes('/teachers')) return 'Faculty & Staff Directory';

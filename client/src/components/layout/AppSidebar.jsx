@@ -112,6 +112,71 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
       ];
     }
 
+    if (role === 'HOD') {
+      return [
+        {
+          title: 'Department Leadership',
+          links: [
+            { name: 'HOD Dashboard', path: '/hod/dashboard', icon: LayoutDashboard },
+            { name: 'Department Faculty', path: '/admin/teachers', icon: UserCheck },
+            { name: 'Department Students', path: '/admin/students', icon: Users },
+            { name: 'Curricula & Courses', path: '/admin/academic-structure', icon: Building2 },
+          ],
+        },
+        {
+          title: 'Academics & Teaching',
+          links: [
+            { name: 'Class Timetable', path: '/timetable', icon: Calendar },
+            { name: 'Mark Attendance', path: '/attendance', icon: CalendarCheck },
+            { name: 'Assignments & Grading', path: '/assignments', icon: FileSpreadsheet },
+            { name: 'Marks & Moderation', path: '/examinations', icon: Award },
+            { name: 'Question Papers (PYQ)', path: '/question-papers', icon: BookMarked },
+          ],
+        },
+        {
+          title: 'Faculty Governance',
+          links: [
+            { name: 'Faculty Leaves Desk', path: '/leave-grievance', icon: LifeBuoy },
+            { name: 'My Salary Slips', path: '/payroll', icon: Landmark },
+            { name: 'Central Library', path: '/library', icon: BookOpen },
+            { name: 'Announcements', path: '/announcements', icon: Bell },
+          ],
+        },
+      ];
+    }
+
+    if (role === 'LIBRARIAN') {
+      return [
+        {
+          title: 'Library Command',
+          links: [
+            { name: 'Librarian Dashboard', path: '/librarian/dashboard', icon: LayoutDashboard },
+          ],
+        },
+        {
+          title: 'Circulation & Stock',
+          links: [
+            { name: 'Books Catalogue', path: '/library', icon: BookOpen },
+            { name: 'Question Papers (PYQ)', path: '/question-papers', icon: BookMarked },
+          ],
+        },
+        {
+          title: 'University Records',
+          links: [
+            { name: 'Student Directory', path: '/admin/students', icon: Users },
+            { name: 'Faculty Directory', path: '/admin/teachers', icon: UserCheck },
+          ],
+        },
+        {
+          title: 'Support',
+          links: [
+            { name: 'Campus Announcements', path: '/announcements', icon: Bell },
+            { name: 'Helpdesk & Grievance', path: '/leave-grievance', icon: LifeBuoy },
+          ],
+        },
+      ];
+    }
+
     if (role === 'ACCOUNTANT') {
       return [
         {

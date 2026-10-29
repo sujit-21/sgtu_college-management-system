@@ -23,13 +23,13 @@ router.get('/books/:id', getBookById);
 router.get('/stats', getLibraryStats);
 
 // Administrative book management
-router.post('/books', authorize('ADMIN', 'SUPER_ADMIN'), createBook);
-router.put('/books/:id', authorize('ADMIN', 'SUPER_ADMIN'), updateBook);
-router.delete('/books/:id', authorize('ADMIN', 'SUPER_ADMIN'), deleteBook);
+router.post('/books', authorize('ADMIN', 'SUPER_ADMIN', 'LIBRARIAN'), createBook);
+router.put('/books/:id', authorize('ADMIN', 'SUPER_ADMIN', 'LIBRARIAN'), updateBook);
+router.delete('/books/:id', authorize('ADMIN', 'SUPER_ADMIN', 'LIBRARIAN'), deleteBook);
 
 // Circulations & Borrowing
 router.get('/issues', getBookIssues);
-router.post('/issues', authorize('ADMIN', 'SUPER_ADMIN', 'TEACHER'), issueBook);
-router.post('/issues/:id/return', authorize('ADMIN', 'SUPER_ADMIN', 'TEACHER'), returnBook);
+router.post('/issues', authorize('ADMIN', 'SUPER_ADMIN', 'LIBRARIAN', 'TEACHER'), issueBook);
+router.post('/issues/:id/return', authorize('ADMIN', 'SUPER_ADMIN', 'LIBRARIAN', 'TEACHER'), returnBook);
 
 export default router;

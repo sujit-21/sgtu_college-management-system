@@ -79,6 +79,8 @@ async function seed() {
   const teacherPassword = await bcrypt.hash('Teacher@123', 10);
   const studentPassword = await bcrypt.hash('Student@123', 10);
   const accountantPassword = await bcrypt.hash('Accountant@123', 10);
+  const hodPassword = await bcrypt.hash('Hod@123', 10);
+  const librarianPassword = await bcrypt.hash('Librarian@123', 10);
 
   // 1. Departments
   const cseDept = await Department.create({
@@ -159,22 +161,29 @@ async function seed() {
     role: 'ACCOUNTANT',
   });
 
-  console.log('✅ Admin and Accountant users created');
+  const librarian = await User.create({
+    email: 'librarian@sgtu.edu',
+    collegeId: 'LIB-001',
+    password: librarianPassword,
+    role: 'LIBRARIAN',
+  });
 
-  // 4. Faculty Members
-  const teacherUser1 = await User.create({
-    email: 'prof.sharma@sgtu.edu',
-    collegeId: 'EMP-101',
-    password: teacherPassword,
-    role: 'TEACHER',
+  console.log('✅ Admin, Accountant, and Librarian users created');
+
+  // 4. Faculty & Department Leadership
+  const hodUser = await User.create({
+    email: 'hod.cse@sgtu.edu',
+    collegeId: 'HOD-CSE-01',
+    password: hodPassword,
+    role: 'HOD',
   });
 
   const teacher1 = await TeacherProfile.create({
-    userId: teacherUser1._id,
-    employeeId: 'EMP-101',
+    userId: hodUser._id,
+    employeeId: 'HOD-CSE-01',
     fullName: 'Prof. Rajesh Sharma',
     phone: '+91 98765 43210',
-    designation: 'Professor & HOD',
+    designation: 'Professor & Head of Department (HOD)',
     qualification: 'Ph.D in Distributed Systems, IIT Delhi',
     specialization: 'Cloud Computing, Distributed Architecture',
     joiningDate: '2016-07-15',

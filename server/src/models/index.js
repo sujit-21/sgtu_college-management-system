@@ -10,7 +10,7 @@ const userSchema = new Schema(
     password: { type: String, required: true },
     role: {
       type: String,
-      enum: ['SUPER_ADMIN', 'ADMIN', 'TEACHER', 'STUDENT', 'ACCOUNTANT'],
+      enum: ['SUPER_ADMIN', 'ADMIN', 'HOD', 'TEACHER', 'STUDENT', 'ACCOUNTANT', 'LIBRARIAN'],
       default: 'STUDENT',
     },
     isActive: { type: Boolean, default: true },
