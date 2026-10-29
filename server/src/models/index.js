@@ -614,34 +614,103 @@ const leaveApplicationSchema = new Schema(
     applicantName: { type: String, required: true },
     applicantRole: { type: String, enum: ['STUDENT', 'TEACHER'], default: 'STUDENT' },
     collegeId: { type: String },
-    leaveType: { type: String, enum: ['Casual Leave', 'Sick / Medical Leave', 'Academic Duty', 'Emergency'], default: 'Casual Leave' },
+    studentId: { type: Schema.Types.ObjectId, ref: 'StudentProfile' },
+    leaveType: {
+      type: String,
+      enum: [
+        'Casual Leave (CL)',
+        'Sick / Medical Leave (ML)',
+        'On-Duty / Academic (OD)',
+        'Emergency Leave',
+        'Casual Leave',
+        'Sick / Medical Leave',
+        'Academic Duty',
+        'Emergency',
+      ],
+      default: 'Casual Leave (CL)',
+    },
     startDate: { type: String, required: true },
     endDate: { type: String, required: true },
     totalDays: { type: Number, default: 1 },
     reason: { type: String, required: true },
-    status: { type: String, enum: ['PENDING', 'APPROVED', 'REJECTED'], default: 'APPROVED' },
-    approvedBy: { type: String, default: 'Dean / HOD' },
-    approvalRemarks: { type: String, default: 'Verified and granted.' },
+    documentProofUrl: { type: String },
+    approvalTier: {
+      type: String,
+      enum: ['SUBMITTED', 'PROCTOR_APPROVED', 'HOD_APPROVED', 'DEAN_APPROVED', 'REJECTED'],
+      default: 'SUBMITTED',
+    },
+    currentStage: {
+      type: String,
+      default: 'Proctor Review',
+    },
+    requiredTiers: { type: Number, default: 1 },
+    approvalHistory: [
+      {
+        tierName: { type: String },
+        action: { type: String },
+        reviewerName: { type: String },
+        reviewerRole: { type: String },
+        remarks: { type: String },
+        timestamp: { type: Date, default: Date.now },
+      },
+    ],
+    status: { type: String, enum: ['PENDING', 'APPROVED', 'REJECTED'], default: 'PENDING' },
+    approvedBy: { type: String, default: 'Class Proctor' },
+    approvalRemarks: { type: String, default: 'Pending proctor review.' },
   },
   { timestamps: true }
 );
 export const LeaveApplication = mongoose.models.LeaveApplication || model('LeaveApplication', leaveApplicationSchema);
+
+// 26b. LeaveQuota
+const leaveQuotaSchema = new Schema(
+  {
+    userId: { type: Schema.Types.ObjectId, ref: 'User' },
+    studentId: { type: Schema.Types.ObjectId, ref: 'StudentProfile' },
+    userRole: { type: String, enum: ['STUDENT', 'TEACHER'], default: 'STUDENT' },
+    academicYear: { type: String, default: '2025-2026' },
+    casualLeave: { total: { type: Number, default: 8 }, used: { type: Number, default: 2 } },
+    medicalLeave: { total: { type: Number, default: 10 }, used: { type: Number, default: 3 } },
+    onDutyLeave: { total: { type: Number, default: 6 }, used: { type: Number, default: 1 } },
+  },
+  { timestamps: true }
+);
+export const LeaveQuota = mongoose.models.LeaveQuota || model('LeaveQuota', leaveQuotaSchema);
 
 // 27. CampusGrievance
 const campusGrievanceSchema = new Schema(
   {
     submittedByName: { type: String, default: 'Anonymous Student' },
     userRole: { type: String, default: 'STUDENT' },
+    isAnonymous: { type: Boolean, default: false },
+    isRaggingReport: { type: Boolean, default: false },
+    secretTrackingHash: { type: String, index: true },
     category: {
       type: String,
-      enum: ['Academic & Courses', 'Hostel & Mess', 'Campus Infrastructure', 'Library & Facilities', 'Anti-Ragging / Security'],
+      enum: [
+        'Anti-Ragging / Security',
+        'Harassment & Safety',
+        'Academic & Courses',
+        'Hostel & Mess',
+        'Campus Infrastructure',
+        'Library & Facilities',
+      ],
       default: 'Academic & Courses',
     },
     subject: { type: String, required: true },
     description: { type: String, required: true },
+    incidentLocation: { type: String, default: 'Campus Premises' },
+    incidentDate: { type: String },
+    evidenceUrl: { type: String },
     priority: { type: String, enum: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'], default: 'MEDIUM' },
-    status: { type: String, enum: ['OPEN', 'UNDER_INVESTIGATION', 'RESOLVED'], default: 'RESOLVED' },
-    resolutionNotes: { type: String, default: 'Action taken by the university administration committee.' },
+    status: {
+      type: String,
+      enum: ['SUBMITTED', 'OPEN', 'UNDER_INVESTIGATION', 'DISCIPLINARY_COMMITTEE_SUMMONED', 'RESOLVED'],
+      default: 'SUBMITTED',
+    },
+    disciplinaryAction: { type: String },
+    resolutionNotes: { type: String, default: 'Under investigation by the Proctorial Anti-Ragging Board.' },
+    investigatingOfficer: { type: String, default: 'Chief Proctor & Anti-Ragging Squad' },
   },
   { timestamps: true }
 );

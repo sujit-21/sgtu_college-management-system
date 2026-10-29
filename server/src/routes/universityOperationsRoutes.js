@@ -6,6 +6,7 @@ import {
   TransportRoute,
   PlacementDrive,
   LeaveApplication,
+  LeaveQuota,
   CampusGrievance,
   TeacherProfile,
   StudentProfile,
@@ -22,7 +23,88 @@ import { authenticate, authorize } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// All university operations require authentication
+// ==========================================
+// ZERO-KNOWLEDGE ANONYMOUS ANTI-RAGGING & HARASSMENT WHISTLEBLOWER
+// (Public endpoints: strictly zero-identity tracking with secret tracking hash)
+// ==========================================
+router.post('/leave-grievance/anti-ragging', async (req, res, next) => {
+  try {
+    const { subject, description, incidentLocation, incidentDate, evidenceUrl, category, priority } = req.body;
+    if (!subject || !description) {
+      return res.status(400).json({ success: false, message: 'Subject and description are required.' });
+    }
+
+    // Generate secret tracking hash: AR-XXXX-XXXX
+    const randomHex = () => Math.floor(1000 + Math.random() * 9000).toString(16).toUpperCase().padStart(4, '0');
+    const secretTrackingHash = `AR-${randomHex()}-${randomHex()}`;
+
+    const grievance = await CampusGrievance.create({
+      submittedByName: 'Anonymous Whistleblower',
+      userRole: 'ANONYMOUS',
+      isAnonymous: true,
+      isRaggingReport: true,
+      secretTrackingHash,
+      category: category || 'Anti-Ragging / Security',
+      subject,
+      description,
+      incidentLocation: incidentLocation || 'Confidential Campus Location',
+      incidentDate: incidentDate || new Date().toISOString().split('T')[0],
+      evidenceUrl: evidenceUrl || '',
+      priority: priority || 'URGENT',
+      status: 'SUBMITTED',
+      investigatingOfficer: 'Chief Proctor & Anti-Ragging Special Squad',
+      resolutionNotes: 'Zero-knowledge whistleblower complaint received and assigned. Proctorial board summoned for immediate safety assessment.',
+    });
+
+    res.status(201).json({
+      success: true,
+      data: {
+        trackingHash: secretTrackingHash,
+        status: grievance.status,
+        createdAt: grievance.createdAt,
+      },
+      message: 'Anonymous Anti-Ragging grievance logged securely with zero identity trace.',
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get('/leave-grievance/anti-ragging/:trackingHash', async (req, res, next) => {
+  try {
+    const { trackingHash } = req.params;
+    const grievance = await CampusGrievance.findOne({
+      secretTrackingHash: trackingHash.trim().toUpperCase(),
+    }).select('-__v');
+
+    if (!grievance) {
+      return res.status(404).json({ success: false, message: 'No anti-ragging complaint found matching this tracking hash.' });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        trackingHash: grievance.secretTrackingHash,
+        subject: grievance.subject,
+        category: grievance.category,
+        incidentLocation: grievance.incidentLocation,
+        incidentDate: grievance.incidentDate,
+        evidenceUrl: grievance.evidenceUrl,
+        priority: grievance.priority,
+        status: grievance.status,
+        investigatingOfficer: grievance.investigatingOfficer,
+        disciplinaryAction: grievance.disciplinaryAction,
+        resolutionNotes: grievance.resolutionNotes,
+        createdAt: grievance.createdAt,
+        updatedAt: grievance.updatedAt,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// All other university operations require authentication
 router.use(authenticate);
 
 // ==========================================
@@ -358,8 +440,63 @@ router.post('/placement/:id/apply', async (req, res, next) => {
 });
 
 // ==========================================
-// 6. LEAVE & GRIEVANCE REDRESSAL
+// 6. LEAVE & GRIEVANCE REDRESSAL (Quota Ledger & Multi-Tier Approvals)
 // ==========================================
+
+// 6a. Leave Balance Quota Ledger
+router.get('/leave-grievance/quota', async (req, res, next) => {
+  try {
+    let quota = await LeaveQuota.findOne({ userId: req.user._id });
+    if (!quota) {
+      const student = await StudentProfile.findOne({ userId: req.user._id });
+      quota = await LeaveQuota.create({
+        userId: req.user._id,
+        studentId: student?._id,
+        userRole: req.user.role === 'TEACHER' ? 'TEACHER' : 'STUDENT',
+        academicYear: '2025-2026',
+        casualLeave: { total: 8, used: 2 },
+        medicalLeave: { total: 10, used: 3 },
+        onDutyLeave: { total: 6, used: 1 },
+      });
+    }
+
+    const clRemaining = Math.max(0, (quota.casualLeave?.total || 8) - (quota.casualLeave?.used || 0));
+    const mlRemaining = Math.max(0, (quota.medicalLeave?.total || 10) - (quota.medicalLeave?.used || 0));
+    const odRemaining = Math.max(0, (quota.onDutyLeave?.total || 6) - (quota.onDutyLeave?.used || 0));
+
+    res.json({
+      success: true,
+      data: {
+        academicYear: quota.academicYear || '2025-2026',
+        casualLeave: {
+          total: quota.casualLeave?.total || 8,
+          used: quota.casualLeave?.used || 0,
+          remaining: clRemaining,
+          code: 'CL',
+          title: 'Casual Leave',
+        },
+        medicalLeave: {
+          total: quota.medicalLeave?.total || 10,
+          used: quota.medicalLeave?.used || 0,
+          remaining: mlRemaining,
+          code: 'ML',
+          title: 'Medical / Sick Leave',
+        },
+        onDutyLeave: {
+          total: quota.onDutyLeave?.total || 6,
+          used: quota.onDutyLeave?.used || 0,
+          remaining: odRemaining,
+          code: 'OD',
+          title: 'On-Duty / Academic Permissions',
+        },
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// 6b. Leaves listing
 router.get('/leave-grievance/leaves', async (req, res, next) => {
   try {
     const leaves = await LeaveApplication.find().sort({ createdAt: -1 });
@@ -369,15 +506,189 @@ router.get('/leave-grievance/leaves', async (req, res, next) => {
   }
 });
 
+// 6c. Leave Application with Multi-Tier Initialization
 router.post('/leave-grievance/leaves', async (req, res, next) => {
   try {
-    const leave = await LeaveApplication.create(req.body);
+    const { leaveType, startDate, endDate, totalDays, reason, documentProofUrl, applicantName, applicantRole } = req.body;
+    const days = parseInt(totalDays, 10) || 1;
+
+    // Multi-tier hierarchy rules:
+    // 1-2 days -> 1 tier (Proctor / Class Teacher)
+    // 3-5 days -> 2 tiers (Proctor -> HOD)
+    // >5 days -> 3 tiers (Proctor -> HOD -> Dean of Student Welfare)
+    let requiredTiers = 1;
+    if (days >= 3 && days <= 5) {
+      requiredTiers = 2;
+    } else if (days > 5) {
+      requiredTiers = 3;
+    }
+
+    const studentName = applicantName || req.user.name || req.user.email?.split('@')[0] || 'Student Applicant';
+    const role = applicantRole || (req.user.role === 'TEACHER' ? 'TEACHER' : 'STUDENT');
+
+    const leave = await LeaveApplication.create({
+      applicantName: studentName,
+      applicantRole: role,
+      collegeId: req.user.collegeId || 'SGTU-STD',
+      studentId: req.user._id,
+      leaveType: leaveType || 'Casual Leave (CL)',
+      startDate,
+      endDate,
+      totalDays: days,
+      reason,
+      documentProofUrl: documentProofUrl || '',
+      approvalTier: 'SUBMITTED',
+      currentStage: 'Proctor / Class Teacher Review',
+      requiredTiers,
+      status: 'PENDING',
+      approvalHistory: [
+        {
+          tierName: 'Student Request Submission',
+          action: 'SUBMITTED',
+          reviewerName: studentName,
+          reviewerRole: role,
+          remarks: `Application lodged for ${days} day(s). Requires ${requiredTiers}-tier approval chain.`,
+          timestamp: new Date(),
+        },
+      ],
+      approvedBy: 'Pending Faculty Review',
+      approvalRemarks: 'Awaiting Tier-1 Proctor / Class Teacher verification.',
+    });
+
     res.status(201).json({ success: true, data: leave });
   } catch (error) {
     next(error);
   }
 });
 
+// 6d. Multi-Tier Hierarchical Approval Chain
+// Student Request -> Proctor / Class Teacher -> HOD -> Dean of Student Welfare
+router.patch(
+  '/leave-grievance/leaves/:id/tier-review',
+  authorize('ADMIN', 'SUPER_ADMIN', 'TEACHER'),
+  async (req, res, next) => {
+    try {
+      const { action, remarks } = req.body; // action: 'APPROVE' | 'REJECT'
+      const leave = await LeaveApplication.findById(req.params.id);
+      if (!leave) {
+        return res.status(404).json({ success: false, message: 'Leave application not found.' });
+      }
+
+      if (leave.status === 'APPROVED' || leave.status === 'REJECTED') {
+        return res.status(400).json({
+          success: false,
+          message: `Leave application is already final (${leave.status}).`,
+        });
+      }
+
+      const reviewerName = req.user.name || req.user.email?.split('@')[0] || 'Institutional Officer';
+      const userRole = req.user.role;
+
+      if (action === 'REJECT') {
+        leave.status = 'REJECTED';
+        leave.approvalTier = 'REJECTED';
+        leave.currentStage = 'Rejected';
+        leave.approvedBy = `${reviewerName} (${userRole})`;
+        leave.approvalRemarks = remarks || 'Leave rejected during hierarchical review.';
+        leave.approvalHistory.push({
+          tierName: leave.currentStage,
+          action: 'REJECTED',
+          reviewerName,
+          reviewerRole: userRole,
+          remarks: remarks || 'Declined with faculty remarks.',
+          timestamp: new Date(),
+        });
+        await leave.save();
+        return res.json({ success: true, data: leave });
+      }
+
+      // Hierarchy steps:
+      // Tier 1: Proctor / Class Teacher Review
+      // Tier 2: Head of Department (HOD) Endorsement
+      // Tier 3: Dean of Student Welfare (DSW) Final Grant
+      let nextTier = 'PROCTOR_APPROVED';
+      let nextStage = 'HOD Endorsement';
+      let tierLabel = 'Proctor / Class Teacher Verification';
+      let isFinal = false;
+
+      if (leave.approvalTier === 'SUBMITTED') {
+        nextTier = 'PROCTOR_APPROVED';
+        tierLabel = 'Tier 1: Proctor / Class Teacher Verification';
+        if (leave.requiredTiers === 1) {
+          isFinal = true;
+          nextStage = 'Fully Approved (Proctor Final)';
+        } else {
+          nextStage = 'Tier 2: Head of Department (HOD) Review';
+        }
+      } else if (leave.approvalTier === 'PROCTOR_APPROVED') {
+        nextTier = 'HOD_APPROVED';
+        tierLabel = 'Tier 2: Head of Department (HOD) Endorsement';
+        if (leave.requiredTiers <= 2) {
+          isFinal = true;
+          nextStage = 'Fully Approved (HOD Final)';
+        } else {
+          nextStage = 'Tier 3: Dean of Student Welfare Review';
+        }
+      } else if (leave.approvalTier === 'HOD_APPROVED') {
+        nextTier = 'DEAN_APPROVED';
+        tierLabel = 'Tier 3: Dean of Student Welfare Final Executive Approval';
+        isFinal = true;
+        nextStage = 'Fully Approved (Dean of Student Welfare)';
+      }
+
+      leave.approvalTier = nextTier;
+      leave.currentStage = nextStage;
+
+      if (isFinal) {
+        leave.status = 'APPROVED';
+        leave.approvedBy = `${reviewerName} (${tierLabel.split(':')[0].trim()})`;
+        leave.approvalRemarks = remarks || 'Granted full institutional approval across all required tiers.';
+
+        // Deduct from real-time quota ledger
+        let quota = await LeaveQuota.findOne({ userId: leave.studentId });
+        if (!quota) {
+          quota = await LeaveQuota.create({
+            userId: leave.studentId,
+            academicYear: '2025-2026',
+            casualLeave: { total: 8, used: 2 },
+            medicalLeave: { total: 10, used: 3 },
+            onDutyLeave: { total: 6, used: 1 },
+          });
+        }
+        if (quota) {
+          const type = leave.leaveType || '';
+          if (type.includes('Casual') || type.includes('CL')) {
+            quota.casualLeave.used = Math.min(quota.casualLeave.total, (quota.casualLeave.used || 0) + leave.totalDays);
+          } else if (type.includes('Medical') || type.includes('Sick') || type.includes('ML')) {
+            quota.medicalLeave.used = Math.min(quota.medicalLeave.total, (quota.medicalLeave.used || 0) + leave.totalDays);
+          } else if (type.includes('Duty') || type.includes('OD') || type.includes('Academic')) {
+            quota.onDutyLeave.used = Math.min(quota.onDutyLeave.total, (quota.onDutyLeave.used || 0) + leave.totalDays);
+          }
+          await quota.save();
+        }
+      } else {
+        leave.status = 'PENDING';
+        leave.approvalRemarks = remarks || `Endorsed by ${reviewerName}. Escalated to ${nextStage}.`;
+      }
+
+      leave.approvalHistory.push({
+        tierName: tierLabel,
+        action: isFinal ? 'FINAL_APPROVED' : 'ENDORSED_TO_NEXT_TIER',
+        reviewerName,
+        reviewerRole: userRole,
+        remarks: remarks || (isFinal ? 'Granted final sign-off.' : 'Verified and escalated to next approval tier.'),
+        timestamp: new Date(),
+      });
+
+      await leave.save();
+      res.json({ success: true, data: leave });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
+// Fallback update
 router.patch('/leave-grievance/leaves/:id', authorize('ADMIN', 'SUPER_ADMIN', 'TEACHER'), async (req, res, next) => {
   try {
     const leave = await LeaveApplication.findByIdAndUpdate(req.params.id, req.body, { new: true });
@@ -387,6 +698,7 @@ router.patch('/leave-grievance/leaves/:id', authorize('ADMIN', 'SUPER_ADMIN', 'T
   }
 });
 
+// 6e. Grievances
 router.get('/leave-grievance/grievances', async (req, res, next) => {
   try {
     const grievances = await CampusGrievance.find().sort({ createdAt: -1 });

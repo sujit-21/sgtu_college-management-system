@@ -28,6 +28,7 @@ import {
   TransportRoute,
   PlacementDrive,
   LeaveApplication,
+  LeaveQuota,
   CampusGrievance,
   QuestionPaper,
 } from './models/index.js';
@@ -45,6 +46,7 @@ async function seed() {
     QuestionPaper.deleteMany({}),
     CampusGrievance.deleteMany({}),
     LeaveApplication.deleteMany({}),
+    LeaveQuota.deleteMany({}),
     PlacementDrive.deleteMany({}),
     TransportRoute.deleteMany({}),
     HostelAllocation.deleteMany({}),
@@ -1167,61 +1169,183 @@ async function seed() {
   ]);
   console.log('✅ Training & placement drives seeded');
 
-  // 18. Leave Applications
+  // 18. Leave Quota & Multi-Tier Leave Applications
+  if (studentUser1) {
+    await LeaveQuota.create({
+      userId: studentUser1._id,
+      userRole: 'STUDENT',
+      academicYear: '2025-2026',
+      casualLeave: { total: 8, used: 2 },
+      medicalLeave: { total: 10, used: 3 },
+      onDutyLeave: { total: 6, used: 1 },
+    });
+  }
+
   await LeaveApplication.create([
     {
       applicantName: 'Arjun Kumar',
       applicantRole: 'STUDENT',
       collegeId: 'SGTU-2023-CS01',
-      leaveType: 'Sick / Medical Leave',
+      studentId: studentUser1?._id,
+      leaveType: 'Sick / Medical Leave (ML)',
       startDate: '2026-10-15',
       endDate: '2026-10-17',
       totalDays: 3,
-      reason: 'Diagnosed with viral fever. Doctor advised complete rest.',
-      status: 'APPROVED',
-      approvedBy: 'Prof. Rajesh Sharma (HOD)',
-      approvalRemarks: 'Medical certificate reviewed and attendance adjusted.',
+      reason: 'Diagnosed with viral fever. Doctor advised complete bed rest.',
+      documentProofUrl: 'https://images.unsplash.com/photo-1584515979956-d9f6e5d09982?auto=format&fit=crop&w=600&q=80',
+      approvalTier: 'PROCTOR_APPROVED',
+      currentStage: 'Tier 2: Head of Department (HOD) Review',
+      requiredTiers: 2,
+      status: 'PENDING',
+      approvedBy: 'Prof. Rajesh Sharma (Proctor)',
+      approvalRemarks: 'Tier-1 Proctor verified medical certificate. Escalated to HOD for final endorsement.',
+      approvalHistory: [
+        {
+          tierName: 'Student Request Submission',
+          action: 'SUBMITTED',
+          reviewerName: 'Arjun Kumar',
+          reviewerRole: 'STUDENT',
+          remarks: 'Application lodged for 3 days with medical prescription attached.',
+          timestamp: new Date('2026-10-14T09:30:00Z'),
+        },
+        {
+          tierName: 'Tier 1: Proctor / Class Teacher Verification',
+          action: 'ENDORSED_TO_NEXT_TIER',
+          reviewerName: 'Prof. Rajesh Sharma',
+          reviewerRole: 'TEACHER',
+          remarks: 'Medical prescription verified genuine. Forwarded to HOD.',
+          timestamp: new Date('2026-10-14T14:15:00Z'),
+        },
+      ],
+    },
+    {
+      applicantName: 'Rohan Gupta',
+      applicantRole: 'STUDENT',
+      collegeId: 'SGTU-2023-CS02',
+      leaveType: 'On-Duty / Academic (OD)',
+      startDate: '2026-11-02',
+      endDate: '2026-11-08',
+      totalDays: 7,
+      reason: 'Representing SGTU at Smart India Hackathon Grand Finale at IIT Roorkee.',
+      documentProofUrl: 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80',
+      approvalTier: 'HOD_APPROVED',
+      currentStage: 'Tier 3: Dean of Student Welfare Review',
+      requiredTiers: 3,
+      status: 'PENDING',
+      approvedBy: 'Dr. Suresh Nair (HOD CSE)',
+      approvalRemarks: 'HOD endorsed hackathon invitation letter. Forwarded to Dean of Student Welfare for executive sanction.',
+      approvalHistory: [
+        {
+          tierName: 'Student Request Submission',
+          action: 'SUBMITTED',
+          reviewerName: 'Rohan Gupta',
+          reviewerRole: 'STUDENT',
+          remarks: 'Applied for 7 days On-Duty leave with official SIH selection letter.',
+          timestamp: new Date('2026-10-20T10:00:00Z'),
+        },
+        {
+          tierName: 'Tier 1: Proctor / Class Teacher Verification',
+          action: 'ENDORSED_TO_NEXT_TIER',
+          reviewerName: 'Dr. Ananya Roy',
+          reviewerRole: 'TEACHER',
+          remarks: 'Endorsed. SIH finalist team captain.',
+          timestamp: new Date('2026-10-21T11:00:00Z'),
+        },
+        {
+          tierName: 'Tier 2: Head of Department (HOD) Endorsement',
+          action: 'ENDORSED_TO_NEXT_TIER',
+          reviewerName: 'Dr. Suresh Nair',
+          reviewerRole: 'TEACHER',
+          remarks: 'Strongly recommended for national hackathon representation.',
+          timestamp: new Date('2026-10-22T15:30:00Z'),
+        },
+      ],
     },
     {
       applicantName: 'Dr. Amit Verma',
       applicantRole: 'TEACHER',
       collegeId: 'EMP-101',
-      leaveType: 'Academic Duty',
+      leaveType: 'On-Duty / Academic (OD)',
       startDate: '2026-11-04',
       endDate: '2026-11-06',
-      totalDays: 3,
+      totalDays: 2,
       reason: 'Keynote Speaker at IEEE International Conference on Cloud Systems.',
+      approvalTier: 'PROCTOR_APPROVED',
+      currentStage: 'Fully Approved',
+      requiredTiers: 1,
       status: 'APPROVED',
       approvedBy: 'Dean of Academics',
       approvalRemarks: 'Sanctioned with travel duty grant.',
+      approvalHistory: [
+        {
+          tierName: 'Faculty Request Submission',
+          action: 'SUBMITTED',
+          reviewerName: 'Dr. Amit Verma',
+          reviewerRole: 'TEACHER',
+          remarks: 'Conference presentation leave application.',
+          timestamp: new Date('2026-10-18T08:00:00Z'),
+        },
+        {
+          tierName: 'Tier 1: Dean / Proctor Approval',
+          action: 'FINAL_APPROVED',
+          reviewerName: 'Dean of Academics',
+          reviewerRole: 'ADMIN',
+          remarks: 'Approved with travel grant.',
+          timestamp: new Date('2026-10-19T10:00:00Z'),
+        },
+      ],
     },
   ]);
-  console.log('✅ Leave applications seeded');
+  console.log('✅ Leave applications & quota ledger seeded');
 
-  // 19. Campus Grievances
+  // 19. Campus Grievances & Anonymous Anti-Ragging Whistleblower Reports
   await CampusGrievance.create([
+    {
+      submittedByName: 'Anonymous Whistleblower',
+      userRole: 'ANONYMOUS',
+      isAnonymous: true,
+      isRaggingReport: true,
+      secretTrackingHash: 'AR-7F3A-881C',
+      category: 'Anti-Ragging / Security',
+      subject: 'Urgent: Hostile ragging intimidation near Hostel Block B Stairwell',
+      description: 'Senior students from 4th year confronted first-year freshers after 10:30 PM, forcing forced labor and physical intimidation. Witnessed repeatedly over past 3 nights.',
+      incidentLocation: 'Hostel Block B, 3rd Floor Staircase Landing',
+      incidentDate: '2026-10-26',
+      evidenceUrl: 'https://images.unsplash.com/photo-1541829070764-84a7d30dd3f3?auto=format&fit=crop&w=600&q=80',
+      priority: 'URGENT',
+      status: 'DISCIPLINARY_COMMITTEE_SUMMONED',
+      investigatingOfficer: 'Chief Proctor & Anti-Ragging Flying Squad',
+      disciplinaryAction: 'Show-cause notice served to 4 identified senior hostellers. CCTV footage preserved. Hostel curfew enforced.',
+      resolutionNotes: 'Disciplinary anti-ragging hearing scheduled on 30th October 2026. Student identity 100% protected under whistleblower protection mandate.',
+    },
     {
       submittedByName: 'Student Body CSE',
       userRole: 'STUDENT',
+      isAnonymous: false,
+      isRaggingReport: false,
       category: 'Campus Infrastructure',
       subject: 'High-speed WiFi range extension in Library 2nd Floor',
       description: 'The study cubicles on the 2nd floor of Central Library experience weak signal for online journal research.',
       priority: 'MEDIUM',
       status: 'RESOLVED',
+      investigatingOfficer: 'IT Infrastructure Lead',
       resolutionNotes: 'Two additional Cisco WiFi 6 access points deployed and speed verified at 350 Mbps.',
     },
     {
       submittedByName: 'Priya Sharma',
       userRole: 'STUDENT',
+      isAnonymous: false,
+      isRaggingReport: false,
       category: 'Academic & Courses',
       subject: 'Elective course registration window extension',
       description: 'Requesting a 2-day extension for choosing the Open Elective Quantum Computing module.',
       priority: 'LOW',
       status: 'RESOLVED',
+      investigatingOfficer: 'Academic Registrar',
       resolutionNotes: 'Portal registration deadline extended till October 31st by Academic Council.',
     },
   ]);
-  console.log('✅ Campus grievances seeded');
+  console.log('✅ Campus grievances & whistleblower complaints seeded');
 
   // 20. Question Papers (PYQ Archive)
   await QuestionPaper.create([
