@@ -4,7 +4,7 @@ import { useAuth } from './context/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 
-// Pages
+// Core Pages
 import { LoginPage } from './pages/auth/LoginPage';
 import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { StudentManagement } from './pages/admin/StudentManagement';
@@ -19,6 +19,15 @@ import { ExamResultsPage } from './pages/examinations/ExamResultsPage';
 import { FeeManagementPage } from './pages/fees/FeeManagementPage';
 import { AnnouncementsPage } from './pages/announcements/AnnouncementsPage';
 import { LibraryPage } from './pages/library/LibraryPage';
+
+// Enterprise University Operations Pages
+import { TimetablePage } from './pages/timetable/TimetablePage';
+import { CertificatesPage } from './pages/certificates/CertificatesPage';
+import { PayrollPage } from './pages/payroll/PayrollPage';
+import { HostelPage } from './pages/hostel/HostelPage';
+import { TransportPage } from './pages/transport/TransportPage';
+import { PlacementPage } from './pages/placement/PlacementPage';
+import { LeaveGrievancePage } from './pages/grievance/LeaveGrievancePage';
 
 export const App = () => {
   const { user } = useAuth();
@@ -46,7 +55,7 @@ export const App = () => {
           </ProtectedRoute>
         }
       >
-        {/* Admin Routes */}
+        {/* Admin Specific Routes */}
         <Route
           path="/admin/dashboard"
           element={
@@ -108,13 +117,22 @@ export const App = () => {
           }
         />
 
-        {/* Shared Academic & Financial Modules */}
+        {/* Core Academic & Financial Modules */}
         <Route path="/attendance" element={<AttendancePage />} />
         <Route path="/assignments" element={<AssignmentPage />} />
         <Route path="/examinations" element={<ExamResultsPage />} />
         <Route path="/fees" element={<FeeManagementPage />} />
         <Route path="/library" element={<LibraryPage />} />
         <Route path="/announcements" element={<AnnouncementsPage />} />
+
+        {/* Enterprise Operations Modules */}
+        <Route path="/timetable" element={<TimetablePage />} />
+        <Route path="/certificates" element={<CertificatesPage />} />
+        <Route path="/payroll" element={<PayrollPage />} />
+        <Route path="/hostel" element={<HostelPage />} />
+        <Route path="/transport" element={<TransportPage />} />
+        <Route path="/placement" element={<PlacementPage />} />
+        <Route path="/leave-grievance" element={<LeaveGrievancePage />} />
       </Route>
 
       {/* Catch-all 404 */}

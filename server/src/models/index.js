@@ -405,3 +405,167 @@ const bookIssueSchema = new Schema(
 );
 
 export const BookIssue = mongoose.models.BookIssue || model('BookIssue', bookIssueSchema);
+
+// 21. TimetableSlot
+const timetableSlotSchema = new Schema(
+  {
+    departmentId: { type: Schema.Types.ObjectId, ref: 'Department' },
+    departmentCode: { type: String, default: 'CSE' },
+    courseCode: { type: String, default: 'B.TECH-CSE' },
+    semester: { type: Number, default: 6 },
+    dayOfWeek: {
+      type: String,
+      enum: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+      required: true,
+    },
+    startTime: { type: String, required: true }, // e.g. "09:00 AM"
+    endTime: { type: String, required: true },   // e.g. "10:00 AM"
+    subjectName: { type: String, required: true },
+    subjectCode: { type: String, required: true },
+    teacherName: { type: String, required: true },
+    roomNumber: { type: String, default: 'LH-102' },
+    type: { type: String, enum: ['Lecture', 'Lab', 'Tutorial'], default: 'Lecture' },
+  },
+  { timestamps: true }
+);
+export const TimetableSlot = mongoose.models.TimetableSlot || model('TimetableSlot', timetableSlotSchema);
+
+// 22. PayrollRecord
+const payrollRecordSchema = new Schema(
+  {
+    teacherId: { type: Schema.Types.ObjectId, ref: 'TeacherProfile' },
+    teacherName: { type: String, required: true },
+    employeeId: { type: String, required: true },
+    month: { type: String, required: true }, // e.g. "October"
+    year: { type: Number, default: 2026 },
+    basicPay: { type: Number, required: true },
+    hra: { type: Number, default: 0 },
+    da: { type: Number, default: 0 },
+    specialAllowance: { type: Number, default: 0 },
+    epfDeduction: { type: Number, default: 0 },
+    tdsDeduction: { type: Number, default: 0 },
+    netSalary: { type: Number, required: true },
+    status: { type: String, enum: ['PROCESSED', 'PAID', 'PENDING'], default: 'PAID' },
+    paymentDate: { type: String, default: '2026-10-28' },
+    transactionRef: { type: String, default: 'SGTU-TXN-90218' },
+    bankName: { type: String },
+    accountNumber: { type: String },
+    panNumber: { type: String },
+    pfUanNumber: { type: String },
+  },
+  { timestamps: true }
+);
+export const PayrollRecord = mongoose.models.PayrollRecord || model('PayrollRecord', payrollRecordSchema);
+
+// 23. HostelAllocation
+const hostelAllocationSchema = new Schema(
+  {
+    hostelName: { type: String, required: true }, // e.g. "Aryabhata Boys Hostel Block A"
+    hostelType: { type: String, enum: ['BOYS', 'GIRLS'], default: 'BOYS' },
+    roomNumber: { type: String, required: true },
+    bedNumber: { type: String, default: 'Bed-1' },
+    roomType: { type: String, enum: ['Single AC', 'Double AC', 'Double Non-AC', 'Triple Non-AC'], default: 'Double AC' },
+    studentId: { type: Schema.Types.ObjectId, ref: 'StudentProfile' },
+    studentName: { type: String, required: true },
+    registrationNumber: { type: String, required: true },
+    wardenName: { type: String, default: 'Dr. Ramesh Narayan' },
+    wardenContact: { type: String, default: '+91 98450 88221' },
+    monthlyFee: { type: Number, default: 9500 },
+    status: { type: String, enum: ['ACTIVE', 'VACATED'], default: 'ACTIVE' },
+    gatePasses: [
+      {
+        reason: { type: String, required: true },
+        destination: { type: String },
+        outTime: { type: String },
+        inTime: { type: String },
+        status: { type: String, enum: ['PENDING', 'APPROVED', 'REJECTED'], default: 'APPROVED' },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
+  },
+  { timestamps: true }
+);
+export const HostelAllocation = mongoose.models.HostelAllocation || model('HostelAllocation', hostelAllocationSchema);
+
+// 24. TransportRoute
+const transportRouteSchema = new Schema(
+  {
+    routeNumber: { type: String, required: true, unique: true }, // e.g. "Route-04"
+    routeName: { type: String, required: true }, // e.g. "Electronic City to SGTU Campus"
+    vehicleNumber: { type: String, required: true }, // e.g. "KA-01-EQ-4089"
+    driverName: { type: String, required: true },
+    driverPhone: { type: String, required: true },
+    capacity: { type: Number, default: 45 },
+    currentSubscribers: { type: Number, default: 38 },
+    monthlyFare: { type: Number, default: 2200 },
+    stops: [
+      {
+        stopName: { type: String, required: true },
+        pickupTime: { type: String, required: true },
+        dropTime: { type: String, required: true },
+      },
+    ],
+  },
+  { timestamps: true }
+);
+export const TransportRoute = mongoose.models.TransportRoute || model('TransportRoute', transportRouteSchema);
+
+// 25. PlacementDrive
+const placementDriveSchema = new Schema(
+  {
+    companyName: { type: String, required: true },
+    companyLogo: { type: String },
+    role: { type: String, required: true },
+    packageLpa: { type: Number, required: true }, // e.g. 14.5 (in LPA)
+    eligibilityMinCgpa: { type: Number, default: 7.0 },
+    eligibleDepartments: [{ type: String }],
+    driveDate: { type: String, required: true },
+    deadline: { type: String },
+    location: { type: String, default: 'On-Campus / Tech Auditorium' },
+    rounds: { type: String, default: 'Online Assessment -> Technical Interview -> HR' },
+    status: { type: String, enum: ['UPCOMING', 'ACTIVE', 'COMPLETED'], default: 'ACTIVE' },
+    totalOffers: { type: Number, default: 0 },
+    appliedCount: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
+export const PlacementDrive = mongoose.models.PlacementDrive || model('PlacementDrive', placementDriveSchema);
+
+// 26. LeaveApplication
+const leaveApplicationSchema = new Schema(
+  {
+    applicantName: { type: String, required: true },
+    applicantRole: { type: String, enum: ['STUDENT', 'TEACHER'], default: 'STUDENT' },
+    collegeId: { type: String },
+    leaveType: { type: String, enum: ['Casual Leave', 'Sick / Medical Leave', 'Academic Duty', 'Emergency'], default: 'Casual Leave' },
+    startDate: { type: String, required: true },
+    endDate: { type: String, required: true },
+    totalDays: { type: Number, default: 1 },
+    reason: { type: String, required: true },
+    status: { type: String, enum: ['PENDING', 'APPROVED', 'REJECTED'], default: 'APPROVED' },
+    approvedBy: { type: String, default: 'Dean / HOD' },
+    approvalRemarks: { type: String, default: 'Verified and granted.' },
+  },
+  { timestamps: true }
+);
+export const LeaveApplication = mongoose.models.LeaveApplication || model('LeaveApplication', leaveApplicationSchema);
+
+// 27. CampusGrievance
+const campusGrievanceSchema = new Schema(
+  {
+    submittedByName: { type: String, default: 'Anonymous Student' },
+    userRole: { type: String, default: 'STUDENT' },
+    category: {
+      type: String,
+      enum: ['Academic & Courses', 'Hostel & Mess', 'Campus Infrastructure', 'Library & Facilities', 'Anti-Ragging / Security'],
+      default: 'Academic & Courses',
+    },
+    subject: { type: String, required: true },
+    description: { type: String, required: true },
+    priority: { type: String, enum: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'], default: 'MEDIUM' },
+    status: { type: String, enum: ['OPEN', 'UNDER_INVESTIGATION', 'RESOLVED'], default: 'RESOLVED' },
+    resolutionNotes: { type: String, default: 'Action taken by the university administration committee.' },
+  },
+  { timestamps: true }
+);
+export const CampusGrievance = mongoose.models.CampusGrievance || model('CampusGrievance', campusGrievanceSchema);

@@ -22,6 +22,13 @@ import {
   AuditLog,
   Book,
   BookIssue,
+  TimetableSlot,
+  PayrollRecord,
+  HostelAllocation,
+  TransportRoute,
+  PlacementDrive,
+  LeaveApplication,
+  CampusGrievance,
 } from './models/index.js';
 
 dotenv.config();
@@ -34,6 +41,13 @@ async function seed() {
 
   // Clear existing collections
   await Promise.all([
+    CampusGrievance.deleteMany({}),
+    LeaveApplication.deleteMany({}),
+    PlacementDrive.deleteMany({}),
+    TransportRoute.deleteMany({}),
+    HostelAllocation.deleteMany({}),
+    PayrollRecord.deleteMany({}),
+    TimetableSlot.deleteMany({}),
     BookIssue.deleteMany({}),
     Book.deleteMany({}),
     AuditLog.deleteMany({}),
@@ -854,6 +868,349 @@ async function seed() {
   });
 
   console.log('✅ Library books and circulations seeded');
+
+  // 13. Timetable Slots
+  const timetableEntries = [
+    // Monday
+    { dayOfWeek: 'Monday', startTime: '09:00 AM', endTime: '10:00 AM', subjectName: 'Distributed Systems & Cloud Computing', subjectCode: 'CS601', teacherName: 'Dr. Amit Verma', roomNumber: 'LH-101', type: 'Lecture' },
+    { dayOfWeek: 'Monday', startTime: '10:00 AM', endTime: '11:00 AM', subjectName: 'Artificial Intelligence & Neural Networks', subjectCode: 'CS602', teacherName: 'Prof. Rajesh Sharma', roomNumber: 'LH-101', type: 'Lecture' },
+    { dayOfWeek: 'Monday', startTime: '11:15 AM', endTime: '01:15 PM', subjectName: 'AI & Machine Learning Practical Lab', subjectCode: 'CS602-LAB', teacherName: 'Dr. Neha Gupta', roomNumber: 'Computer Lab 3', type: 'Lab' },
+    { dayOfWeek: 'Monday', startTime: '02:00 PM', endTime: '03:00 PM', subjectName: 'Software Engineering & Agile Methodologies', subjectCode: 'CS603', teacherName: 'Dr. Amit Verma', roomNumber: 'LH-102', type: 'Lecture' },
+
+    // Tuesday
+    { dayOfWeek: 'Tuesday', startTime: '09:00 AM', endTime: '10:00 AM', subjectName: 'Artificial Intelligence & Neural Networks', subjectCode: 'CS602', teacherName: 'Prof. Rajesh Sharma', roomNumber: 'LH-101', type: 'Lecture' },
+    { dayOfWeek: 'Tuesday', startTime: '10:00 AM', endTime: '11:00 AM', subjectName: 'Distributed Systems & Cloud Computing', subjectCode: 'CS601', teacherName: 'Dr. Amit Verma', roomNumber: 'LH-101', type: 'Lecture' },
+    { dayOfWeek: 'Tuesday', startTime: '11:15 AM', endTime: '12:15 PM', subjectName: 'Cyber Security & Cryptography', subjectCode: 'CS604', teacherName: 'Dr. Neha Gupta', roomNumber: 'LH-104', type: 'Lecture' },
+    { dayOfWeek: 'Tuesday', startTime: '02:00 PM', endTime: '04:00 PM', subjectName: 'Cloud & Kubernetes Laboratory', subjectCode: 'CS601-LAB', teacherName: 'Dr. Amit Verma', roomNumber: 'Cloud Lab 1', type: 'Lab' },
+
+    // Wednesday
+    { dayOfWeek: 'Wednesday', startTime: '09:00 AM', endTime: '10:00 AM', subjectName: 'Cyber Security & Cryptography', subjectCode: 'CS604', teacherName: 'Dr. Neha Gupta', roomNumber: 'LH-104', type: 'Lecture' },
+    { dayOfWeek: 'Wednesday', startTime: '10:00 AM', endTime: '11:00 AM', subjectName: 'Software Engineering & Agile Methodologies', subjectCode: 'CS603', teacherName: 'Dr. Amit Verma', roomNumber: 'LH-102', type: 'Lecture' },
+    { dayOfWeek: 'Wednesday', startTime: '11:15 AM', endTime: '12:15 PM', subjectName: 'Artificial Intelligence & Neural Networks', subjectCode: 'CS602', teacherName: 'Prof. Rajesh Sharma', roomNumber: 'LH-101', type: 'Tutorial' },
+    { dayOfWeek: 'Wednesday', startTime: '02:00 PM', endTime: '03:30 PM', subjectName: 'Entrepreneurship & Tech Innovation', subjectCode: 'HS601', teacherName: 'Prof. Rajesh Sharma', roomNumber: 'Seminar Hall B', type: 'Lecture' },
+
+    // Thursday
+    { dayOfWeek: 'Thursday', startTime: '09:00 AM', endTime: '10:00 AM', subjectName: 'Distributed Systems & Cloud Computing', subjectCode: 'CS601', teacherName: 'Dr. Amit Verma', roomNumber: 'LH-101', type: 'Lecture' },
+    { dayOfWeek: 'Thursday', startTime: '10:00 AM', endTime: '11:00 AM', subjectName: 'Cyber Security & Cryptography', subjectCode: 'CS604', teacherName: 'Dr. Neha Gupta', roomNumber: 'LH-104', type: 'Lecture' },
+    { dayOfWeek: 'Thursday', startTime: '11:15 AM', endTime: '01:15 PM', subjectName: 'Cryptography & Network Security Lab', subjectCode: 'CS604-LAB', teacherName: 'Dr. Neha Gupta', roomNumber: 'Cyber Security Center', type: 'Lab' },
+    { dayOfWeek: 'Thursday', startTime: '02:00 PM', endTime: '03:00 PM', subjectName: 'Software Engineering & Agile Methodologies', subjectCode: 'CS603', teacherName: 'Dr. Amit Verma', roomNumber: 'LH-102', type: 'Tutorial' },
+
+    // Friday
+    { dayOfWeek: 'Friday', startTime: '09:00 AM', endTime: '10:00 AM', subjectName: 'Artificial Intelligence & Neural Networks', subjectCode: 'CS602', teacherName: 'Prof. Rajesh Sharma', roomNumber: 'LH-101', type: 'Lecture' },
+    { dayOfWeek: 'Friday', startTime: '10:00 AM', endTime: '11:00 AM', subjectName: 'Distributed Systems & Cloud Computing', subjectCode: 'CS601', teacherName: 'Dr. Amit Verma', roomNumber: 'LH-101', type: 'Lecture' },
+    { dayOfWeek: 'Friday', startTime: '11:15 AM', endTime: '12:45 PM', subjectName: 'Capstone Project Evaluation & Colloquium', subjectCode: 'CP699', teacherName: 'Prof. Rajesh Sharma', roomNumber: 'Project Lab 2', type: 'Lab' },
+  ];
+
+  await TimetableSlot.insertMany(timetableEntries);
+  console.log('✅ Timetable schedule seeded');
+
+  // 14. Payroll Records
+  await PayrollRecord.create([
+    {
+      teacherId: teacher1._id,
+      teacherName: 'Dr. Amit Verma',
+      employeeId: 'EMP-101',
+      month: 'October',
+      year: 2026,
+      basicPay: 85000,
+      hra: 20400,
+      da: 15300,
+      specialAllowance: 9000,
+      epfDeduction: 1800,
+      tdsDeduction: 10376,
+      netSalary: 117524,
+      status: 'PAID',
+      paymentDate: '2026-10-28',
+      transactionRef: 'SGTU-NEFT-984210',
+      bankName: 'HDFC Bank',
+      accountNumber: '50100492817291',
+      panNumber: 'ABCPD1234E',
+      pfUanNumber: '101234567890',
+    },
+    {
+      teacherId: teacher2._id,
+      teacherName: 'Dr. Neha Gupta',
+      employeeId: 'EMP-102',
+      month: 'October',
+      year: 2026,
+      basicPay: 78000,
+      hra: 18720,
+      da: 14040,
+      specialAllowance: 8000,
+      epfDeduction: 1800,
+      tdsDeduction: 9500,
+      netSalary: 107460,
+      status: 'PAID',
+      paymentDate: '2026-10-28',
+      transactionRef: 'SGTU-NEFT-984211',
+      bankName: 'State Bank of India',
+      accountNumber: '39481029381',
+      panNumber: 'BKUPG9876Q',
+      pfUanNumber: '101987654321',
+    },
+    {
+      teacherId: teacher3._id,
+      teacherName: 'Prof. Rajesh Sharma',
+      employeeId: 'EMP-103',
+      month: 'October',
+      year: 2026,
+      basicPay: 125000,
+      hra: 30000,
+      da: 22500,
+      specialAllowance: 12000,
+      epfDeduction: 1800,
+      tdsDeduction: 15160,
+      netSalary: 172540,
+      status: 'PAID',
+      paymentDate: '2026-10-28',
+      transactionRef: 'SGTU-NEFT-984212',
+      bankName: 'ICICI Bank',
+      accountNumber: '001205009871',
+      panNumber: 'CJLPS4567M',
+      pfUanNumber: '101567890123',
+    },
+  ]);
+  console.log('✅ Faculty payroll and salary records seeded');
+
+  // 15. Hostel Allocations
+  await HostelAllocation.create([
+    {
+      hostelName: 'Aryabhata Boys Hostel Block A',
+      hostelType: 'BOYS',
+      roomNumber: 'A-204',
+      bedNumber: 'Bed-1',
+      roomType: 'Double AC',
+      studentId: student1._id,
+      studentName: 'Arjun Kumar',
+      registrationNumber: 'SGTU-2023-CS01',
+      wardenName: 'Dr. Ramesh Narayan',
+      wardenContact: '+91 98450 88221',
+      monthlyFee: 9500,
+      status: 'ACTIVE',
+      gatePasses: [
+        {
+          reason: 'Weekend Home Visit',
+          destination: 'Bangalore Cyber City',
+          outTime: '2026-10-24 05:00 PM',
+          inTime: '2026-10-26 08:00 AM',
+          status: 'APPROVED',
+        },
+      ],
+    },
+    {
+      hostelName: 'Gargi Girls Hostel Block B',
+      hostelType: 'GIRLS',
+      roomNumber: 'B-108',
+      bedNumber: 'Bed-2',
+      roomType: 'Double AC',
+      studentId: student2._id,
+      studentName: 'Priya Sharma',
+      registrationNumber: 'SGTU-2023-CS02',
+      wardenName: 'Prof. Meenakshi Sundaram',
+      wardenContact: '+91 98450 88222',
+      monthlyFee: 9500,
+      status: 'ACTIVE',
+      gatePasses: [
+        {
+          reason: 'Inter-College Hackathon at IISc',
+          destination: 'IISc Bangalore',
+          outTime: '2026-10-27 08:00 AM',
+          inTime: '2026-10-27 09:00 PM',
+          status: 'APPROVED',
+        },
+      ],
+    },
+    {
+      hostelName: 'Aryabhata Boys Hostel Block A',
+      hostelType: 'BOYS',
+      roomNumber: 'A-312',
+      bedNumber: 'Bed-1',
+      roomType: 'Single AC',
+      studentId: student3._id,
+      studentName: 'Rohit Singh',
+      registrationNumber: 'SGTU-2024-CS15',
+      wardenName: 'Dr. Ramesh Narayan',
+      wardenContact: '+91 98450 88221',
+      monthlyFee: 12500,
+      status: 'ACTIVE',
+      gatePasses: [],
+    },
+  ]);
+  console.log('✅ Hostel and residential rooms seeded');
+
+  // 16. Transport Routes
+  await TransportRoute.create([
+    {
+      routeNumber: 'Route-01',
+      routeName: 'Electronic City Express to SGTU Campus',
+      vehicleNumber: 'KA-01-EQ-4089',
+      driverName: 'Manjunath Gowda',
+      driverPhone: '+91 98451 12340',
+      capacity: 45,
+      currentSubscribers: 42,
+      monthlyFare: 2200,
+      stops: [
+        { stopName: 'Wipro Gate Electronic City', pickupTime: '07:30 AM', dropTime: '05:30 PM' },
+        { stopName: 'Silk Board Junction', pickupTime: '07:45 AM', dropTime: '05:15 PM' },
+        { stopName: 'HSR Layout BDA Complex', pickupTime: '08:00 AM', dropTime: '05:00 PM' },
+        { stopName: 'SGTU Main Campus Gate', pickupTime: '08:25 AM', dropTime: '04:30 PM' },
+      ],
+    },
+    {
+      routeNumber: 'Route-02',
+      routeName: 'Whitefield & ITPL Corridor',
+      vehicleNumber: 'KA-03-FA-7712',
+      driverName: 'Suresh Kumar',
+      driverPhone: '+91 98451 12341',
+      capacity: 45,
+      currentSubscribers: 39,
+      monthlyFare: 2500,
+      stops: [
+        { stopName: 'Hope Farm Whitefield', pickupTime: '07:15 AM', dropTime: '05:45 PM' },
+        { stopName: 'ITPL Main Entrance', pickupTime: '07:30 AM', dropTime: '05:30 PM' },
+        { stopName: 'Marathahalli Bridge', pickupTime: '07:50 AM', dropTime: '05:10 PM' },
+        { stopName: 'SGTU Main Campus Gate', pickupTime: '08:25 AM', dropTime: '04:30 PM' },
+      ],
+    },
+    {
+      routeNumber: 'Route-03',
+      routeName: 'Indiranagar & MG Road City Line',
+      vehicleNumber: 'KA-04-MB-2290',
+      driverName: 'Naveen Reddy',
+      driverPhone: '+91 98451 12342',
+      capacity: 40,
+      currentSubscribers: 36,
+      monthlyFare: 2000,
+      stops: [
+        { stopName: 'Trinity Circle MG Road', pickupTime: '07:35 AM', dropTime: '05:25 PM' },
+        { stopName: 'Indiranagar 100ft Road Metro', pickupTime: '07:50 AM', dropTime: '05:10 PM' },
+        { stopName: 'Domlur Flyover', pickupTime: '08:05 AM', dropTime: '04:55 PM' },
+        { stopName: 'SGTU Main Campus Gate', pickupTime: '08:25 AM', dropTime: '04:30 PM' },
+      ],
+    },
+  ]);
+  console.log('✅ University transport and bus fleet seeded');
+
+  // 17. Placement Drives
+  await PlacementDrive.create([
+    {
+      companyName: 'Google Cloud India',
+      companyLogo: 'https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg',
+      role: 'Cloud Software Engineer (L3)',
+      packageLpa: 28.5,
+      eligibilityMinCgpa: 8.0,
+      eligibleDepartments: ['Computer Science and Engineering', 'Electronics & Communication'],
+      driveDate: '2026-11-15',
+      deadline: '2026-11-10',
+      location: 'Tech Auditorium 1 / Hybrid',
+      rounds: 'Coding Assessment -> System Design -> Technical Core -> Leadership',
+      status: 'UPCOMING',
+      totalOffers: 6,
+      appliedCount: 42,
+    },
+    {
+      companyName: 'Microsoft R&D',
+      companyLogo: 'https://upload.wikimedia.org/wikipedia/commons/9/96/Microsoft_logo_%282012%29.svg',
+      role: 'Software Development Engineer I',
+      packageLpa: 24.0,
+      eligibilityMinCgpa: 7.5,
+      eligibleDepartments: ['Computer Science and Engineering', 'Electronics & Communication'],
+      driveDate: '2026-11-20',
+      deadline: '2026-11-14',
+      location: 'SGTU Innovation Hall',
+      rounds: 'Online Hackathon -> Data Structures -> Behavioral',
+      status: 'UPCOMING',
+      totalOffers: 8,
+      appliedCount: 55,
+    },
+    {
+      companyName: 'Amazon Web Services (AWS)',
+      companyLogo: 'https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg',
+      role: 'Cloud Solutions Associate',
+      packageLpa: 19.5,
+      eligibilityMinCgpa: 7.0,
+      eligibleDepartments: ['Computer Science and Engineering', 'Electronics & Communication', 'Mechanical Engineering'],
+      driveDate: '2026-11-28',
+      deadline: '2026-11-22',
+      location: 'Virtual Assessment Center',
+      rounds: 'AWS Cloud Quiz -> Coding -> Bar Raiser',
+      status: 'ACTIVE',
+      totalOffers: 12,
+      appliedCount: 68,
+    },
+    {
+      companyName: 'Tata Consultancy Services (TCS Digital)',
+      companyLogo: 'https://upload.wikimedia.org/wikipedia/commons/b/b1/Tata_Consultancy_Services_Logo.svg',
+      role: 'Digital Innovator & Fullstack Dev',
+      packageLpa: 9.0,
+      eligibilityMinCgpa: 6.5,
+      eligibleDepartments: ['Computer Science and Engineering', 'Electronics & Communication', 'Mechanical Engineering'],
+      driveDate: '2026-10-18',
+      deadline: '2026-10-14',
+      location: 'Campus Placements Arena',
+      rounds: 'NQT -> Technical -> HR',
+      status: 'COMPLETED',
+      totalOffers: 24,
+      appliedCount: 110,
+    },
+  ]);
+  console.log('✅ Training & placement drives seeded');
+
+  // 18. Leave Applications
+  await LeaveApplication.create([
+    {
+      applicantName: 'Arjun Kumar',
+      applicantRole: 'STUDENT',
+      collegeId: 'SGTU-2023-CS01',
+      leaveType: 'Sick / Medical Leave',
+      startDate: '2026-10-15',
+      endDate: '2026-10-17',
+      totalDays: 3,
+      reason: 'Diagnosed with viral fever. Doctor advised complete rest.',
+      status: 'APPROVED',
+      approvedBy: 'Prof. Rajesh Sharma (HOD)',
+      approvalRemarks: 'Medical certificate reviewed and attendance adjusted.',
+    },
+    {
+      applicantName: 'Dr. Amit Verma',
+      applicantRole: 'TEACHER',
+      collegeId: 'EMP-101',
+      leaveType: 'Academic Duty',
+      startDate: '2026-11-04',
+      endDate: '2026-11-06',
+      totalDays: 3,
+      reason: 'Keynote Speaker at IEEE International Conference on Cloud Systems.',
+      status: 'APPROVED',
+      approvedBy: 'Dean of Academics',
+      approvalRemarks: 'Sanctioned with travel duty grant.',
+    },
+  ]);
+  console.log('✅ Leave applications seeded');
+
+  // 19. Campus Grievances
+  await CampusGrievance.create([
+    {
+      submittedByName: 'Student Body CSE',
+      userRole: 'STUDENT',
+      category: 'Campus Infrastructure',
+      subject: 'High-speed WiFi range extension in Library 2nd Floor',
+      description: 'The study cubicles on the 2nd floor of Central Library experience weak signal for online journal research.',
+      priority: 'MEDIUM',
+      status: 'RESOLVED',
+      resolutionNotes: 'Two additional Cisco WiFi 6 access points deployed and speed verified at 350 Mbps.',
+    },
+    {
+      submittedByName: 'Priya Sharma',
+      userRole: 'STUDENT',
+      category: 'Academic & Courses',
+      subject: 'Elective course registration window extension',
+      description: 'Requesting a 2-day extension for choosing the Open Elective Quantum Computing module.',
+      priority: 'LOW',
+      status: 'RESOLVED',
+      resolutionNotes: 'Portal registration deadline extended till October 31st by Academic Council.',
+    },
+  ]);
+  console.log('✅ Campus grievances seeded');
 
   // 13. Audit Logs
   await AuditLog.create({

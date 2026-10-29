@@ -17,6 +17,13 @@ import {
   LogOut,
   User,
   Sparkles,
+  Calendar,
+  Landmark,
+  Building,
+  Bus,
+  Briefcase,
+  FileText,
+  LifeBuoy,
 } from 'lucide-react';
 
 export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobileSidebar }) => {
@@ -31,11 +38,18 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
         { name: 'Students', path: '/admin/students', icon: Users },
         { name: 'Faculty & Staff', path: '/admin/teachers', icon: UserCheck },
         { name: 'Depts & Courses', path: '/admin/academic-structure', icon: Building2 },
+        { name: 'Class Timetable', path: '/timetable', icon: Calendar },
         { name: 'Attendance', path: '/attendance', icon: CalendarCheck },
         { name: 'Assignments', path: '/assignments', icon: FileSpreadsheet },
         { name: 'Exams & Results', path: '/examinations', icon: Award },
         { name: 'Fees & Invoices', path: '/fees', icon: CreditCard },
+        { name: 'Faculty Payroll', path: '/payroll', icon: Landmark },
+        { name: 'ID & Certificates', path: '/certificates', icon: FileText },
         { name: 'Library & Books', path: '/library', icon: BookOpen },
+        { name: 'Hostel & Housing', path: '/hostel', icon: Building },
+        { name: 'Campus Transport', path: '/transport', icon: Bus },
+        { name: 'Placements (T&P)', path: '/placement', icon: Briefcase },
+        { name: 'Leaves & Grievance', path: '/leave-grievance', icon: LifeBuoy },
         { name: 'Announcements', path: '/announcements', icon: Bell },
       ];
     }
@@ -43,10 +57,14 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
     if (role === 'TEACHER') {
       return [
         { name: 'Teacher Dashboard', path: '/teacher/dashboard', icon: LayoutDashboard },
+        { name: 'Class Timetable', path: '/timetable', icon: Calendar },
         { name: 'Mark Attendance', path: '/attendance', icon: CalendarCheck },
         { name: 'Assignments & Grading', path: '/assignments', icon: FileSpreadsheet },
         { name: 'Marks & Results', path: '/examinations', icon: Award },
+        { name: 'My Salary Slips', path: '/payroll', icon: Landmark },
         { name: 'Library & Books', path: '/library', icon: BookOpen },
+        { name: 'Campus Transport', path: '/transport', icon: Bus },
+        { name: 'Leaves & Grievance', path: '/leave-grievance', icon: LifeBuoy },
         { name: 'Announcements', path: '/announcements', icon: Bell },
       ];
     }
@@ -55,6 +73,8 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
       return [
         { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
         { name: 'Fees & Invoices', path: '/fees', icon: CreditCard },
+        { name: 'Faculty Payroll', path: '/payroll', icon: Landmark },
+        { name: 'Fee No-Dues Certs', path: '/certificates', icon: FileText },
         { name: 'Students', path: '/admin/students', icon: Users },
         { name: 'Library & Books', path: '/library', icon: BookOpen },
         { name: 'Announcements', path: '/announcements', icon: Bell },
@@ -65,11 +85,17 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
     return [
       { name: 'Student Dashboard', path: '/student/dashboard', icon: LayoutDashboard },
       { name: 'My Profile', path: '/student/profile', icon: User },
+      { name: 'Class Timetable', path: '/timetable', icon: Calendar },
+      { name: 'ID Card & Certs', path: '/certificates', icon: FileText },
       { name: 'Attendance Record', path: '/attendance', icon: CalendarCheck },
-      { name: 'Coursework & Submissions', path: '/assignments', icon: FileSpreadsheet },
+      { name: 'Coursework', path: '/assignments', icon: FileSpreadsheet },
       { name: 'Exams & Grades', path: '/examinations', icon: Award },
-      { name: 'Fee Invoices & Receipts', path: '/fees', icon: CreditCard },
+      { name: 'Fee Receipts', path: '/fees', icon: CreditCard },
       { name: 'Library & Books', path: '/library', icon: BookOpen },
+      { name: 'Hostel & Gate Pass', path: '/hostel', icon: Building },
+      { name: 'Campus Bus Pass', path: '/transport', icon: Bus },
+      { name: 'Campus Placements', path: '/placement', icon: Briefcase },
+      { name: 'Leaves & Grievance', path: '/leave-grievance', icon: LifeBuoy },
       { name: 'Announcements', path: '/announcements', icon: Bell },
     ];
   };
@@ -79,7 +105,7 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
   const sidebarContent = (
     <div className="flex flex-col h-full bg-white dark:bg-navy-900 border-r border-slate-200 dark:border-navy-800 text-slate-800 dark:text-white select-none transition-colors">
       {/* Brand Header */}
-      <div className="flex items-center justify-between h-16 px-4 border-b border-slate-100 dark:border-navy-800">
+      <div className="flex items-center justify-between h-16 px-4 border-b border-slate-100 dark:border-navy-800 shrink-0">
         <div className="flex items-center gap-3 overflow-hidden">
           {/* Logo Monogram: SG */}
           <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-indigo-600 to-accent-purple flex items-center justify-center shrink-0 shadow-md shadow-brand-500/25 ring-2 ring-brand-100 dark:ring-brand-900/40">
@@ -108,8 +134,8 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
         </button>
       </div>
 
-      {/* Nav List */}
-      <div className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+      {/* Nav List with smooth scroll */}
+      <div className="flex-1 overflow-y-auto py-3 px-3 space-y-1 custom-scrollbar">
         {navLinks.map((item) => {
           const Icon = item.icon;
           return (
@@ -118,15 +144,15 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
               to={item.path}
               onClick={closeMobileSidebar}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group ${
+                `flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-medium transition-all duration-150 group ${
                   isActive
-                    ? 'bg-gradient-to-r from-brand-600 to-brand-500 text-white shadow-md shadow-brand-500/20 font-semibold'
+                    ? 'bg-gradient-to-r from-brand-600 to-brand-500 text-white shadow-md shadow-brand-500/20 font-bold'
                     : 'text-slate-600 dark:text-slate-300 hover:text-brand-600 dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-navy-800'
                 }`
               }
               title={isCollapsed ? item.name : undefined}
             >
-              <Icon className="w-4 h-4 shrink-0 transition-transform group-hover:scale-105" />
+              <Icon className="w-4 h-4 shrink-0 transition-transform group-hover:scale-110" />
               {!isCollapsed && <span className="truncate">{item.name}</span>}
             </NavLink>
           );
@@ -134,37 +160,33 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
       </div>
 
       {/* User Mini Profile & Logout */}
-      <div className="p-3 border-t border-slate-100 dark:border-navy-800">
+      <div className="p-3 border-t border-slate-100 dark:border-navy-800 shrink-0">
         <div
           className={`flex items-center ${
             isCollapsed ? 'justify-center' : 'justify-between'
-          } p-2.5 rounded-xl bg-slate-50 dark:bg-navy-950/60 border border-slate-200/80 dark:border-navy-800`}
+          } gap-2`}
         >
-          <div className="flex items-center gap-2.5 overflow-hidden">
-            <div className="w-8 h-8 rounded-lg bg-brand-500 text-white flex items-center justify-center shrink-0 font-extrabold text-xs uppercase shadow-sm">
-              {user?.email?.charAt(0) || 'U'}
-            </div>
-            {!isCollapsed && (
-              <div className="flex flex-col truncate">
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">
-                  {user?.profile?.fullName || user?.email?.split('@')[0]}
-                </span>
-                <span className="text-[10px] text-slate-400 font-mono font-medium">
-                  {user?.role}
-                </span>
-              </div>
-            )}
-          </div>
-
           {!isCollapsed && (
-            <button
-              onClick={logout}
-              title="Sign Out"
-              className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-slate-200/60 dark:hover:bg-navy-800 transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2.5 overflow-hidden">
+              <div className="w-8 h-8 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-600 dark:text-brand-400 font-bold text-xs flex items-center justify-center shrink-0">
+                {user?.email?.charAt(0).toUpperCase() || 'U'}
+              </div>
+              <div className="flex flex-col truncate">
+                <span className="text-xs font-bold text-slate-900 dark:text-white truncate">
+                  {user?.email?.split('@')[0]}
+                </span>
+                <span className="text-[10px] text-slate-400 capitalize font-medium">{role.toLowerCase()}</span>
+              </div>
+            </div>
           )}
+
+          <button
+            onClick={logout}
+            className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+            title="Sign out"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </div>
@@ -172,27 +194,33 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
 
   return (
     <>
-      {/* Desktop Persistent Sidebar */}
+      {/* Desktop Sidebar */}
       <aside
-        className={`hidden md:block shrink-0 transition-all duration-200 z-30 ${
+        className={`hidden md:block fixed top-0 left-0 z-30 h-screen transition-all duration-300 ${
           isCollapsed ? 'w-20' : 'w-64'
         }`}
       >
-        <div className="sticky top-0 h-screen">{sidebarContent}</div>
+        {sidebarContent}
       </aside>
 
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer Backdrop */}
       {isMobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden flex">
-          <div
-            onClick={closeMobileSidebar}
-            className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
-          />
-          <div className="relative w-72 max-w-[80vw] h-full shadow-2xl z-10 animate-in slide-in-from-left duration-200">
-            {sidebarContent}
-          </div>
-        </div>
+        <div
+          onClick={closeMobileSidebar}
+          className="md:hidden fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+        />
       )}
+
+      {/* Mobile Sidebar Drawer */}
+      <aside
+        className={`md:hidden fixed top-0 left-0 z-50 h-screen w-72 transition-transform duration-300 ease-in-out ${
+          isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        {sidebarContent}
+      </aside>
     </>
   );
 };
+
+export default AppSidebar;
