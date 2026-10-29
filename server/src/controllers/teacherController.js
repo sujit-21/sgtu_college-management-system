@@ -197,6 +197,16 @@ export const updateTeacher = async (req, res, next) => {
       }
     });
 
+    // Admin password or ID assignment during update
+    if (req.body.password && req.body.password.trim().length >= 6) {
+      const hashedPassword = await bcrypt.hash(req.body.password.trim(), 10);
+      await User.findByIdAndUpdate(teacher.userId, { password: hashedPassword });
+    }
+    if (req.body.employeeId && req.body.employeeId.trim().toUpperCase() !== teacher.employeeId) {
+      teacher.employeeId = req.body.employeeId.trim().toUpperCase();
+      await User.findByIdAndUpdate(teacher.userId, { collegeId: teacher.employeeId });
+    }
+
     await teacher.save();
 
     const updated = await TeacherProfile.findById(teacher._id)

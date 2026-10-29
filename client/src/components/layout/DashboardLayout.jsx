@@ -16,6 +16,7 @@ export const DashboardLayout = () => {
     if (p.includes('/dashboard')) return 'Dashboard Overview';
     if (p.includes('/students')) return 'Student Directory & Admissions';
     if (p.includes('/teachers')) return 'Faculty & Staff Directory';
+    if (p.includes('/users')) return 'User Credentials & Access Control';
     if (p.includes('/academic-structure')) return 'Departments & Courses';
     if (p.includes('/timetable')) return 'Class Timetable & Schedule';
     if (p.includes('/attendance')) return 'Attendance Management';

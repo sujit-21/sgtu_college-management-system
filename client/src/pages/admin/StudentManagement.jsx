@@ -65,6 +65,7 @@ export const StudentManagement = () => {
     address: '',
     bloodGroup: 'O+',
     academicStatus: 'ACTIVE',
+    password: 'Student@123',
 
     // Extended Student Data Section
     aadhaarNumber: '',
@@ -736,6 +737,19 @@ export const StudentManagement = () => {
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Assign Login Password (Default: Student@123)
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.password || ''}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    placeholder="Student@123"
+                    className="w-full text-xs px-3 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-xl font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     Department *
                   </label>
                   <select
@@ -1118,6 +1132,19 @@ export const StudentManagement = () => {
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     className="w-full text-xs px-3 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-xl"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Assign / Reset Login Password
+                  </label>
+                  <input
+                    type="password"
+                    placeholder="Leave blank to preserve current password"
+                    value={formData.password || ''}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="w-full text-xs px-3 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-xl font-mono"
                   />
                 </div>
 

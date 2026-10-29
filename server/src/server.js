@@ -25,6 +25,7 @@ import announcementRoutes from './routes/announcementRoutes.js';
 import notificationRoutes from './routes/notificationRoutes.js';
 import libraryRoutes from './routes/libraryRoutes.js';
 import universityOperationsRoutes from './routes/universityOperationsRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 dotenv.config();
 
@@ -94,6 +95,7 @@ app.use('/api/fees', feeRoutes);
 app.use('/api/announcements', announcementRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/library', libraryRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api', universityOperationsRoutes);
 
 // Error Handling Middleware

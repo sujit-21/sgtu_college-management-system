@@ -10,6 +10,7 @@ import { AdminDashboard } from './pages/admin/AdminDashboard';
 import { StudentManagement } from './pages/admin/StudentManagement';
 import { TeacherManagement } from './pages/admin/TeacherManagement';
 import { DepartmentCourseManagement } from './pages/admin/DepartmentCourseManagement';
+import { UserManagement } from './pages/admin/UserManagement';
 import { TeacherDashboard } from './pages/teacher/TeacherDashboard';
 import { StudentDashboard } from './pages/student/StudentDashboard';
 import { StudentProfilePage } from './pages/student/StudentProfilePage';
@@ -90,6 +91,14 @@ export const App = () => {
           element={
             <ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}>
               <DepartmentCourseManagement />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <ProtectedRoute allowedRoles={['ADMIN', 'SUPER_ADMIN']}>
+              <UserManagement />
             </ProtectedRoute>
           }
         />

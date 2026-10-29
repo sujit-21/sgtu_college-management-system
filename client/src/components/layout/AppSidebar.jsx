@@ -25,6 +25,7 @@ import {
   FileText,
   LifeBuoy,
   BookMarked,
+  KeyRound,
 } from 'lucide-react';
 
 export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobileSidebar }) => {
@@ -39,6 +40,7 @@ export const AppSidebar = ({ isCollapsed, toggleSidebar, isMobileOpen, closeMobi
           title: 'Main',
           links: [
             { name: 'Dashboard', path: '/admin/dashboard', icon: LayoutDashboard },
+            { name: 'Users & Passwords', path: '/admin/users', icon: KeyRound },
             { name: 'Students', path: '/admin/students', icon: Users },
             { name: 'Faculty & Staff', path: '/admin/teachers', icon: UserCheck },
             { name: 'Depts & Courses', path: '/admin/academic-structure', icon: Building2 },

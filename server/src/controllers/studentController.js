@@ -234,6 +234,16 @@ export const updateStudent = async (req, res, next) => {
       }
     });
 
+    // Admin password or ID assignment during update
+    if (req.body.password && req.body.password.trim().length >= 6) {
+      const hashedPassword = await bcrypt.hash(req.body.password.trim(), 10);
+      await User.findByIdAndUpdate(student.userId, { password: hashedPassword });
+    }
+    if (req.body.registrationNumber && req.body.registrationNumber.trim().toUpperCase() !== student.registrationNumber) {
+      student.registrationNumber = req.body.registrationNumber.trim().toUpperCase();
+      await User.findByIdAndUpdate(student.userId, { collegeId: student.registrationNumber });
+    }
+
     await student.save();
 
     await AuditLog.create({
