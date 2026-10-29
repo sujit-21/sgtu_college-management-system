@@ -10,6 +10,8 @@ import {
   Sparkles,
   BookOpen,
   Filter,
+  AlertCircle,
+  ShieldCheck,
 } from 'lucide-react';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
@@ -28,6 +30,7 @@ export const TimetablePage = () => {
   const [semester, setSemester] = useState(6);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
+  const [collisionError, setCollisionError] = useState('');
 
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
@@ -74,15 +77,21 @@ export const TimetablePage = () => {
   const handleAddSlot = async (e) => {
     e.preventDefault();
     setActionLoading(true);
+    setCollisionError('');
     try {
       const res = await api.post('/timetable', formData);
       if (res.data.success) {
         setIsAddOpen(false);
         setFormData(initialForm);
+        setCollisionError('');
         fetchTimetable();
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to add timetable slot.');
+      if (err.response?.status === 409) {
+        setCollisionError(err.response.data.message);
+      } else {
+        alert(err.response?.data?.message || 'Failed to add timetable slot.');
+      }
     } finally {
       setActionLoading(false);
     }
@@ -305,6 +314,16 @@ export const TimetablePage = () => {
         subtitle={`Adding class to ${departmentCode} Semester ${semester}`}
       >
         <form onSubmit={handleAddSlot} className="space-y-4 text-xs">
+          {collisionError && (
+            <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200 flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 mt-0.5 shrink-0" />
+              <div className="text-xs">
+                <strong className="block font-bold">Scheduling Clash Detected</strong>
+                <span className="leading-relaxed mt-0.5">{collisionError}</span>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">

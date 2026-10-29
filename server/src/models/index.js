@@ -273,6 +273,49 @@ examResultSchema.index({ examinationId: 1, studentId: 1, subjectId: 1 }, { uniqu
 
 export const ExamResult = mongoose.models.ExamResult || model('ExamResult', examResultSchema);
 
+// 12b. ExamRevaluation
+const examRevaluationSchema = new Schema(
+  {
+    examinationId: { type: Schema.Types.ObjectId, ref: 'Examination', required: true },
+    studentId: { type: Schema.Types.ObjectId, ref: 'StudentProfile', required: true },
+    subjectId: { type: Schema.Types.ObjectId, ref: 'Subject', required: true },
+    type: { type: String, enum: ['REVALUATION', 'RECHECKING', 'PHOTOCOPY'], default: 'REVALUATION' },
+    originalMarks: { type: Number, required: true },
+    revisedMarks: { type: Number },
+    reason: { type: String, required: true },
+    status: {
+      type: String,
+      enum: ['APPLIED', 'FEE_PAID', 'UNDER_EVALUATION', 'MARKS_REVISED', 'NO_CHANGE', 'REJECTED'],
+      default: 'APPLIED',
+    },
+    feeAmount: { type: Number, default: 500 },
+    paymentStatus: { type: String, enum: ['UNPAID', 'PAID'], default: 'PAID' },
+    evaluatorRemarks: { type: String },
+  },
+  { timestamps: true }
+);
+
+export const ExamRevaluation = mongoose.models.ExamRevaluation || model('ExamRevaluation', examRevaluationSchema);
+
+// 12c. BacklogRegistration
+const backlogRegistrationSchema = new Schema(
+  {
+    examinationId: { type: Schema.Types.ObjectId, ref: 'Examination', required: true },
+    studentId: { type: Schema.Types.ObjectId, ref: 'StudentProfile', required: true },
+    subjectId: { type: Schema.Types.ObjectId, ref: 'Subject', required: true },
+    semester: { type: Number, required: true },
+    previousGrade: { type: String, default: 'F' },
+    previousMarks: { type: Number, default: 0 },
+    registrationFee: { type: Number, default: 750 },
+    status: { type: String, enum: ['REGISTERED', 'ADMITTED', 'APPEARED', 'CLEARED'], default: 'REGISTERED' },
+    attemptNumber: { type: Number, default: 2 },
+  },
+  { timestamps: true }
+);
+
+export const BacklogRegistration =
+  mongoose.models.BacklogRegistration || model('BacklogRegistration', backlogRegistrationSchema);
+
 // 13. FeeCategory
 const feeCategorySchema = new Schema(
   {
@@ -420,6 +463,25 @@ const bookIssueSchema = new Schema(
 );
 
 export const BookIssue = mongoose.models.BookIssue || model('BookIssue', bookIssueSchema);
+
+// 20b. BookReservation
+const bookReservationSchema = new Schema(
+  {
+    bookId: { type: Schema.Types.ObjectId, ref: 'Book', required: true },
+    studentId: { type: Schema.Types.ObjectId, ref: 'StudentProfile', required: true },
+    reservedDate: { type: Date, default: Date.now },
+    status: {
+      type: String,
+      enum: ['WAITING', 'AVAILABLE_FOR_PICKUP', 'FULFILLED', 'EXPIRED', 'CANCELLED'],
+      default: 'WAITING',
+    },
+    queuePosition: { type: Number, default: 1 },
+    pickupDeadline: { type: Date },
+  },
+  { timestamps: true }
+);
+
+export const BookReservation = mongoose.models.BookReservation || model('BookReservation', bookReservationSchema);
 
 // 21. TimetableSlot
 const timetableSlotSchema = new Schema(

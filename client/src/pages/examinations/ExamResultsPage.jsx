@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import {
   Award,
@@ -14,7 +14,20 @@ import {
   GraduationCap,
   Sparkles,
   Download,
-  Check
+  Check,
+  ShieldAlert,
+  ShieldCheck,
+  RefreshCw,
+  Layers,
+  TrendingUp,
+  BarChart2,
+  FileCheck,
+  Search,
+  DollarSign,
+  AlertTriangle,
+  HelpCircle,
+  ArrowRight,
+  Filter,
 } from 'lucide-react';
 import api from '../../services/api';
 import { PageHeader } from '../../components/layout/PageHeader';
@@ -24,7 +37,15 @@ import { Modal } from '../../components/ui/Modal';
 
 export const ExamResultsPage = () => {
   const { user } = useAuth();
-  const isStaff = user?.role === 'TEACHER' || user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' || user?.role === 'HOD';
+  const isStaff =
+    user?.role === 'TEACHER' ||
+    user?.role === 'ADMIN' ||
+    user?.role === 'SUPER_ADMIN' ||
+    user?.role === 'HOD';
+
+  // Active top-level sub-module tab
+  // 'results' | 'admit-card' | 'revaluation' | 'backlogs' | 'moderation'
+  const [activeTab, setActiveTab] = useState('results');
 
   const [exams, setExams] = useState([]);
   const [selectedExam, setSelectedExam] = useState(null);
@@ -44,6 +65,41 @@ export const ExamResultsPage = () => {
   const [isTranscriptOpen, setIsTranscriptOpen] = useState(false);
   const [transcriptCandidate, setTranscriptCandidate] = useState(null);
 
+  // Admit Card State
+  const [admitCard, setAdmitCard] = useState(null);
+  const [loadingAdmitCard, setLoadingAdmitCard] = useState(false);
+
+  // Revaluation State
+  const [revaluations, setRevaluations] = useState([]);
+  const [loadingReval, setLoadingReval] = useState(false);
+  const [isApplyRevalOpen, setIsApplyRevalOpen] = useState(false);
+  const [revalForm, setRevalForm] = useState({
+    subjectId: '',
+    type: 'REVALUATION',
+    originalMarks: 36,
+    reason: '',
+    feeAmount: 500,
+  });
+  const [selectedRevalToEdit, setSelectedRevalToEdit] = useState(null);
+  const [revalEditForm, setRevalEditForm] = useState({
+    status: 'MARKS_REVISED',
+    revisedMarks: 42,
+    evaluatorRemarks: 'Verified descriptive proofs. 6 marks awarded.',
+  });
+
+  // Backlogs State
+  const [backlogData, setBacklogData] = useState({ backlogs: [], registrations: [], feePerSubject: 750 });
+  const [loadingBacklogs, setLoadingBacklogs] = useState(false);
+  const [isRegisterBacklogOpen, setIsRegisterBacklogOpen] = useState(false);
+  const [selectedBacklogSubject, setSelectedBacklogSubject] = useState(null);
+
+  // Moderation & Analytics State
+  const [moderationData, setModerationData] = useState(null);
+  const [loadingModeration, setLoadingModeration] = useState(false);
+  const [graceMarksInput, setGraceMarksInput] = useState(3);
+  const [minMarksInput, setMinMarksInput] = useState(36);
+
+  // Initial loader
   const loadExams = async () => {
     setLoading(true);
     try {
@@ -81,7 +137,10 @@ export const ExamResultsPage = () => {
           const res = await api.get('/subjects');
           if (res.data.success) {
             setSubjects(res.data.data);
-            if (res.data.data.length > 0) setSelectedSubjectId(res.data.data[0]._id);
+            if (res.data.data.length > 0) {
+              setSelectedSubjectId(res.data.data[0]._id);
+              setRevalForm((prev) => ({ ...prev, subjectId: res.data.data[0]._id }));
+            }
           }
         } catch (e) {
           console.error(e);
@@ -90,6 +149,80 @@ export const ExamResultsPage = () => {
       fetchSubs();
     }
   }, [isStaff]);
+
+  // Load Admit Card when switching to Admit Card Tab
+  const loadAdmitCard = async (examId) => {
+    if (!examId) return;
+    setLoadingAdmitCard(true);
+    try {
+      const res = await api.get(`/examinations/${examId}/admit-card`);
+      if (res.data.success) {
+        setAdmitCard(res.data.data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingAdmitCard(false);
+    }
+  };
+
+  // Load Revaluations
+  const loadRevaluations = async () => {
+    setLoadingReval(true);
+    try {
+      const res = await api.get('/examinations/revaluation/list');
+      if (res.data.success) {
+        setRevaluations(res.data.data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingReval(false);
+    }
+  };
+
+  // Load Backlogs
+  const loadBacklogs = async () => {
+    setLoadingBacklogs(true);
+    try {
+      const res = await api.get('/examinations/backlogs/my-list');
+      if (res.data.success) {
+        setBacklogData(res.data.data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingBacklogs(false);
+    }
+  };
+
+  // Load Moderation Analytics
+  const loadModeration = async (examId) => {
+    if (!examId) return;
+    setLoadingModeration(true);
+    try {
+      const res = await api.get(`/examinations/${examId}/moderation`);
+      if (res.data.success) {
+        setModerationData(res.data.data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingModeration(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'admit-card' && selectedExam) {
+      loadAdmitCard(selectedExam._id);
+    } else if (activeTab === 'revaluation') {
+      loadRevaluations();
+    } else if (activeTab === 'backlogs') {
+      loadBacklogs();
+    } else if (activeTab === 'moderation' && selectedExam && isStaff) {
+      loadModeration(selectedExam._id);
+    }
+  }, [activeTab, selectedExam]);
 
   const handlePublishResults = async () => {
     if (!selectedExam) return;
@@ -116,7 +249,7 @@ export const ExamResultsPage = () => {
         setStudentRoster(res.data.data);
         const initial = {};
         res.data.data.forEach((s) => {
-          initial[s._id] = 85; // default marks
+          initial[s._id] = 85;
         });
         setMarksState(initial);
       }
@@ -153,6 +286,95 @@ export const ExamResultsPage = () => {
     }
   };
 
+  // Submit Revaluation Application
+  const handleApplyReval = async (e) => {
+    e.preventDefault();
+    setActionLoading(true);
+    try {
+      const res = await api.post('/examinations/revaluation/apply', {
+        examinationId: selectedExam?._id,
+        ...revalForm,
+      });
+      if (res.data.success) {
+        setIsApplyRevalOpen(false);
+        setFeedbackBanner('Revaluation application submitted and nominal fee acknowledged.');
+        loadRevaluations();
+      }
+    } catch (e) {
+      alert(e.response?.data?.message || 'Failed to apply for revaluation.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Update Revaluation Status (Staff)
+  const handleUpdateRevalStatus = async (e) => {
+    e.preventDefault();
+    if (!selectedRevalToEdit) return;
+    setActionLoading(true);
+    try {
+      const res = await api.patch(`/examinations/revaluation/${selectedRevalToEdit._id}/status`, revalEditForm);
+      if (res.data.success) {
+        setSelectedRevalToEdit(null);
+        setFeedbackBanner('Revaluation application evaluated and student record updated.');
+        loadRevaluations();
+        if (selectedExam) loadResults(selectedExam._id);
+      }
+    } catch (e) {
+      alert(e.response?.data?.message || 'Failed to update revaluation.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Register for Supplementary / Backlog Exam
+  const handleRegisterBacklog = async (e) => {
+    e.preventDefault();
+    if (!selectedBacklogSubject) return;
+    setActionLoading(true);
+    try {
+      const res = await api.post('/examinations/backlogs/register', {
+        examinationId: selectedExam?._id,
+        subjectId: selectedBacklogSubject.subjectId?._id || selectedBacklogSubject.subjectId,
+        semester: selectedBacklogSubject.semester || 5,
+        previousMarks: selectedBacklogSubject.obtainedMarks || 32,
+        previousGrade: selectedBacklogSubject.grade || 'F',
+      });
+      if (res.data.success) {
+        setIsRegisterBacklogOpen(false);
+        setSelectedBacklogSubject(null);
+        setFeedbackBanner('Supplementary backlog examination registration confirmed.');
+        loadBacklogs();
+      }
+    } catch (e) {
+      alert(e.response?.data?.message || 'Failed to register backlog.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Apply Grace Marks (Staff)
+  const handleApplyGraceMarks = async () => {
+    if (!selectedExam) return;
+    if (!window.confirm(`Are you sure you want to award +${graceMarksInput} grace marks to all borderline candidates (scoring between ${minMarksInput} and 39)?`)) return;
+    setActionLoading(true);
+    try {
+      const res = await api.post(`/examinations/${selectedExam._id}/moderation/grace-marks`, {
+        graceMarks: Number(graceMarksInput),
+        minMarks: Number(minMarksInput),
+      });
+      if (res.data.success) {
+        setFeedbackBanner(res.data.message);
+        loadModeration(selectedExam._id);
+        loadResults(selectedExam._id);
+      }
+    } catch (e) {
+      alert(e.response?.data?.message || 'Failed to apply grace marks.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   // Helper to open transcript
   const openTranscriptModal = (resItem = null) => {
     if (resItem) {
@@ -165,7 +387,6 @@ export const ExamResultsPage = () => {
         items: results.filter((r) => r.studentId?._id === resItem.studentId?._id || r.studentId === resItem.studentId),
       });
     } else {
-      // Current student
       setTranscriptCandidate({
         fullName: user?.name || 'Aarav Sharma',
         registrationNumber: user?.collegeId || 'SGTU2024CS001',
@@ -189,7 +410,6 @@ export const ExamResultsPage = () => {
     return { grade: 'F', point: 0, label: 'Reappear' };
   };
 
-  // Compute SGPA for transcript
   const transcriptRows = (transcriptCandidate?.items?.length ? transcriptCandidate.items : results).map((r, i) => {
     const credits = r.subjectId?.credits || (i % 2 === 0 ? 4 : 3);
     const marks = r.obtainedMarks || 84;
@@ -217,23 +437,32 @@ export const ExamResultsPage = () => {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Examinations, Schedules & Official Grade Transcripts"
-        description="Official university examination timetables, grade distributions, and printable institutional transcripts."
+        title="Examinations, Hall Tickets & Academic Evaluation Suite"
+        description="Official examination timetables, automated hall ticket issuance, revaluation workflows, and statistical grade moderation."
       >
         <div className="flex items-center gap-2">
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={() => openTranscriptModal()}
-            icon={Printer}
-          >
-            {isStaff ? 'Preview Official Marksheet' : 'Official Grade Sheet / Transcript'}
-          </Button>
+          {activeTab === 'results' && (
+            <Button variant="secondary" size="sm" onClick={() => openTranscriptModal()} icon={Printer}>
+              {isStaff ? 'Preview Marksheet' : 'Official Grade Sheet'}
+            </Button>
+          )}
 
-          {isStaff && (
+          {activeTab === 'admit-card' && admitCard?.eligibilityStatus === 'CLEARED' && (
+            <Button variant="primary" size="sm" onClick={() => window.print()} icon={Printer}>
+              Print Hall Ticket
+            </Button>
+          )}
+
+          {activeTab === 'revaluation' && !isStaff && (
+            <Button variant="primary" size="sm" onClick={() => setIsApplyRevalOpen(true)} icon={Plus}>
+              Apply Revaluation
+            </Button>
+          )}
+
+          {isStaff && activeTab === 'results' && (
             <>
               <Button variant="secondary" size="sm" onClick={openMarksEntry} icon={Award}>
-                Enter Subject Marks
+                Enter Marks
               </Button>
               <Button
                 variant="emerald"
@@ -261,29 +490,73 @@ export const ExamResultsPage = () => {
         </div>
       )}
 
-      {/* Exam Selector Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        {exams.map((exam) => (
-          <button
-            key={exam._id}
-            onClick={() => {
-              setSelectedExam(exam);
-              loadResults(exam._id);
-            }}
-            className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
-              selectedExam?._id === exam._id
-                ? 'bg-brand-500 text-white shadow-sm shadow-brand-500/20'
-                : 'bg-white dark:bg-navy-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-navy-800'
-            }`}
-          >
-            {exam.title}
-          </button>
-        ))}
+      {/* Top Multi-Feature Navigation Sub-tabs */}
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-navy-800 pb-3 overflow-x-auto">
+        {[
+          { id: 'results', label: 'Results & Transcripts', icon: Award },
+          { id: 'admit-card', label: 'Admit Card / Hall Ticket', icon: QrCode, badge: 'Official' },
+          { id: 'revaluation', label: 'Revaluation Portal', icon: RefreshCw },
+          { id: 'backlogs', label: 'Backlog & Remedial Exams', icon: Layers },
+          ...(isStaff ? [{ id: 'moderation', label: 'Marks Moderation & Bell Curve', icon: BarChart2, badge: 'Staff' }] : []),
+        ].map((tab) => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all ${
+                isActive
+                  ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20'
+                  : 'bg-white dark:bg-navy-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-navy-800 hover:bg-slate-50 dark:hover:bg-navy-800'
+              }`}
+            >
+              <Icon className="w-4 h-4" />
+              <span>{tab.label}</span>
+              {tab.badge && (
+                <span
+                  className={`text-[10px] px-1.5 py-0.5 rounded-full font-extrabold ${
+                    isActive ? 'bg-white/20 text-white' : 'bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-400'
+                  }`}
+                >
+                  {tab.badge}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
-      {selectedExam && (
+      {/* Active Exam Selector for Results, Admit Card, & Moderation */}
+      {activeTab !== 'revaluation' && activeTab !== 'backlogs' && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">Session:</span>
+          {exams.map((exam) => (
+            <button
+              key={exam._id}
+              onClick={() => {
+                setSelectedExam(exam);
+                if (activeTab === 'results') loadResults(exam._id);
+                if (activeTab === 'admit-card') loadAdmitCard(exam._id);
+                if (activeTab === 'moderation') loadModeration(exam._id);
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all ${
+                selectedExam?._id === exam._id
+                  ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                  : 'bg-white dark:bg-navy-900 text-slate-500 border border-slate-200 dark:border-navy-800'
+              }`}
+            >
+              {exam.title}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 1. RESULTS & TRANSCRIPTS TAB */}
+      {/* ========================================================================= */}
+      {activeTab === 'results' && selectedExam && (
         <div className="space-y-6">
-          {/* Exam Timetable Card */}
           <div className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-soft">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -291,359 +564,1078 @@ export const ExamResultsPage = () => {
                   Examination Timetable & Seating Schedule
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Academic Year: {selectedExam.academicYear} • Status:{' '}
-                  <StatusBadge status={selectedExam.status} />
+                  Academic Year: {selectedExam.academicYear} • Status: <StatusBadge status={selectedExam.status} />
                 </p>
               </div>
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 dark:bg-navy-950 border-b border-slate-100 dark:border-navy-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                  <tr>
-                    <th className="px-4 py-2.5">Date</th>
-                    <th className="px-4 py-2.5">Time</th>
-                    <th className="px-4 py-2.5">Subject</th>
-                    <th className="px-4 py-2.5">Examination Room</th>
-                    <th className="px-4 py-2.5">Max Marks</th>
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-navy-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th className="pb-3 px-3">Subject</th>
+                    <th className="pb-3 px-3">Code</th>
+                    <th className="pb-3 px-3">Date</th>
+                    <th className="pb-3 px-3">Time</th>
+                    <th className="pb-3 px-3">Hall / Room</th>
+                    <th className="pb-3 px-3">Max Marks</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
-                  {(selectedExam.schedules || []).map((s) => (
-                    <tr key={s._id} className="hover:bg-slate-50/50 dark:hover:bg-navy-800/40">
-                      <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-200">
-                        {new Date(s.examDate).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 py-3 text-slate-600 dark:text-slate-400">
-                        {s.startTime} - {s.endTime}
-                      </td>
-                      <td className="px-4 py-3 font-bold text-brand-600 dark:text-brand-400">
-                        {s.subjectId?.code} - {s.subjectId?.name}
-                      </td>
-                      <td className="px-4 py-3 text-slate-700 dark:text-slate-300">
-                        {s.room}
-                      </td>
-                      <td className="px-4 py-3 font-mono font-semibold text-slate-800 dark:text-slate-200">
-                        {s.maxMarks}
+                <tbody className="divide-y divide-slate-100 dark:divide-navy-800 text-xs">
+                  {selectedExam.schedules?.length > 0 ? (
+                    selectedExam.schedules.map((s, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-navy-800/50">
+                        <td className="py-3 px-3 font-semibold text-slate-900 dark:text-white">
+                          {s.subjectId?.name || 'Subject'}
+                        </td>
+                        <td className="py-3 px-3 font-mono text-slate-500">{s.subjectId?.code || 'N/A'}</td>
+                        <td className="py-3 px-3 text-slate-600 dark:text-slate-300">
+                          {new Date(s.examDate).toLocaleDateString()}
+                        </td>
+                        <td className="py-3 px-3 text-slate-500">
+                          {s.startTime} - {s.endTime}
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-slate-700 dark:text-slate-300 font-medium">
+                            {s.room}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 font-bold text-slate-900 dark:text-white">{s.maxMarks}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="6" className="py-6 text-center text-slate-400">
+                        No subject schedules announced yet for this examination session.
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
 
-          {/* Published Results / Grade Sheet Table */}
           <div className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-soft">
             <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <Award className="w-4 h-4 text-brand-500" />
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                  {isStaff ? 'Published Student Performance' : 'Official Semester Grade Sheet'}
-                </h3>
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Published Results & Performance Roster</h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Showing {results.length} evaluated student subject entries
+                </p>
               </div>
             </div>
 
-            {results.length === 0 ? (
-              <div className="py-8 text-center text-xs text-slate-400">
-                {selectedExam.status === 'RESULTS_PUBLISHED'
-                  ? 'No published results available yet.'
-                  : 'Results have not been officially published yet for this examination.'}
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs sm:text-sm">
-                  <thead className="bg-slate-50 dark:bg-navy-950 border-b border-slate-100 dark:border-navy-800 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-navy-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th className="pb-3 px-3">Student</th>
+                    <th className="pb-3 px-3">Reg No</th>
+                    <th className="pb-3 px-3">Subject</th>
+                    <th className="pb-3 px-3 text-right">Marks</th>
+                    <th className="pb-3 px-3 text-center">Grade</th>
+                    <th className="pb-3 px-3 text-center">Status</th>
+                    <th className="pb-3 px-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-navy-800 text-xs">
+                  {results.length > 0 ? (
+                    results.map((res) => {
+                      const gradeDetails = getGradeDetails(res.obtainedMarks);
+                      const isPassing = res.obtainedMarks >= 40 && res.grade !== 'F';
+                      return (
+                        <tr key={res._id} className="hover:bg-slate-50/50 dark:hover:bg-navy-800/50">
+                          <td className="py-3 px-3 font-semibold text-slate-900 dark:text-white">
+                            {res.studentId?.fullName || 'Student'}
+                          </td>
+                          <td className="py-3 px-3 font-mono text-slate-500">
+                            {res.studentId?.registrationNumber || 'N/A'}
+                          </td>
+                          <td className="py-3 px-3 text-slate-700 dark:text-slate-300">
+                            {res.subjectId?.name || 'Subject'}
+                          </td>
+                          <td className="py-3 px-3 text-right font-bold text-slate-900 dark:text-white">
+                            {res.obtainedMarks} / {res.maxMarks}
+                          </td>
+                          <td className="py-3 px-3 text-center">
+                            <span
+                              className={`px-2 py-0.5 rounded-full font-extrabold text-[11px] ${
+                                res.obtainedMarks >= 80
+                                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                                  : isPassing
+                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300'
+                                  : 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300'
+                              }`}
+                            >
+                              {res.grade || gradeDetails.grade}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 text-center">
+                            <span
+                              className={`text-[10px] px-2 py-0.5 rounded font-bold ${
+                                isPassing ? 'text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40' : 'text-rose-600 bg-rose-50 dark:bg-rose-950/40'
+                              }`}
+                            >
+                              {isPassing ? 'PASS' : 'ARREAR / FAIL'}
+                            </span>
+                          </td>
+                          <td className="py-3 px-3 text-right">
+                            <button
+                              onClick={() => openTranscriptModal(res)}
+                              className="text-brand-500 hover:text-brand-600 font-bold text-xs inline-flex items-center gap-1"
+                            >
+                              <Printer className="w-3.5 h-3.5" />
+                              <span>Transcript</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  ) : (
                     <tr>
-                      {isStaff && <th className="px-5 py-3">Student</th>}
-                      <th className="px-5 py-3">Subject</th>
-                      <th className="px-5 py-3">Credits</th>
-                      <th className="px-5 py-3">Score</th>
-                      <th className="px-5 py-3">Letter Grade</th>
-                      <th className="px-5 py-3">Result</th>
-                      {isStaff && <th className="px-5 py-3 text-right">Transcript</th>}
+                      <td colSpan="7" className="py-8 text-center text-slate-400">
+                        No results published for this examination yet.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 2. OFFICIAL ADMIT CARD / HALL TICKET TAB */}
+      {/* ========================================================================= */}
+      {activeTab === 'admit-card' && (
+        <div className="space-y-6">
+          {loadingAdmitCard ? (
+            <div className="p-12 text-center text-slate-400 bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-800">
+              <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-brand-500" />
+              <span>Verifying examination eligibility and fetching hall ticket...</span>
+            </div>
+          ) : admitCard ? (
+            <div>
+              {/* Clearance Status Warning / Approval */}
+              {admitCard.eligibilityStatus === 'WITHHELD' ? (
+                <div className="p-6 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-amber-100 dark:bg-amber-900/60 rounded-xl text-amber-700 dark:text-amber-300">
+                      <ShieldAlert className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h4 className="text-base font-extrabold flex items-center gap-2">
+                        <span>Admit Card Withheld by Controller of Examinations</span>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-rose-500 text-white font-bold uppercase tracking-wider">
+                          Action Required
+                        </span>
+                      </h4>
+                      <p className="text-xs text-amber-700 dark:text-amber-300 mt-1 max-w-2xl leading-relaxed">
+                        {admitCard.withholdReason}
+                      </p>
+                      <div className="mt-3 flex flex-wrap gap-4 text-xs font-semibold">
+                        <span>
+                          Attendance Recorded:{' '}
+                          <strong className={admitCard.attendancePercentage < 75 ? 'text-rose-600' : 'text-emerald-600'}>
+                            {admitCard.attendancePercentage}%
+                          </strong>{' '}
+                          (Min. 75% required)
+                        </span>
+                        <span>
+                          Outstanding Fee Balance:{' '}
+                          <strong className={admitCard.pendingFeeDues > 0 ? 'text-rose-600' : 'text-emerald-600'}>
+                            ₹{admitCard.pendingFeeDues.toLocaleString('en-IN')}
+                          </strong>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {admitCard.pendingFeeDues > 0 && (
+                      <Button variant="primary" size="sm" onClick={() => (window.location.href = '/fees')} icon={DollarSign}>
+                        Clear Fees Online
+                      </Button>
+                    )}
+                    <Button variant="secondary" size="sm" onClick={() => (window.location.href = '/attendance')} icon={Calendar}>
+                      View Attendance
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200 mb-6 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <ShieldCheck className="w-6 h-6 text-emerald-500" />
+                    <div>
+                      <p className="text-sm font-bold">Eligibility Cleared: Mandatory 75% Attendance & Fee Dues Verified</p>
+                      <p className="text-xs text-emerald-600 dark:text-emerald-400">
+                        Attendance: <strong>{admitCard.attendancePercentage}%</strong> • Fee Clearance: <strong>ZERO DUES</strong> • Hall: <strong>{admitCard.allottedHall}</strong>
+                      </p>
+                    </div>
+                  </div>
+                  <Button variant="primary" size="sm" onClick={() => window.print()} icon={Printer}>
+                    Print Official Admit Card
+                  </Button>
+                </div>
+              )}
+
+              {/* Printable Official Admit Card Layout */}
+              <div className="p-8 sm:p-10 rounded-3xl bg-white dark:bg-navy-900 border-2 border-slate-300 dark:border-navy-700 shadow-xl max-w-4xl mx-auto print:m-0 print:p-6 print:border-black print:shadow-none text-slate-800 dark:text-slate-200 font-sans">
+                {/* Header */}
+                <div className="border-b-2 border-slate-900 dark:border-white pb-6 mb-6">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-2xl bg-brand-600 text-white flex items-center justify-center font-black text-2xl shadow-lg">
+                        SG
+                      </div>
+                      <div>
+                        <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tight">
+                          SG Tech University (SGTU)
+                        </h2>
+                        <p className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                          Office of the Controller of Examinations • Official Admit Card
+                        </p>
+                        <p className="text-[11px] text-slate-400 font-medium">
+                          Accredited A++ Grade by NAAC • Recognized under UGC Act 1956
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="inline-block px-3 py-1 rounded-md bg-slate-900 text-white dark:bg-white dark:text-slate-900 text-xs font-mono font-bold">
+                        {admitCard.admitCardNumber}
+                      </span>
+                      <p className="text-[11px] text-slate-400 mt-1 font-mono font-bold tracking-widest">
+                        {admitCard.barcode}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Candidate Particulars & Photo Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 pb-6 border-b border-slate-200 dark:border-navy-800">
+                  <div className="md:col-span-3 grid grid-cols-2 sm:grid-cols-3 gap-4 text-xs">
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Candidate Name</p>
+                      <p className="text-sm font-black text-slate-900 dark:text-white mt-0.5">{admitCard.studentName}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Registration Number</p>
+                      <p className="text-sm font-mono font-bold text-slate-900 dark:text-white mt-0.5">
+                        {admitCard.registrationNumber}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Roll Number</p>
+                      <p className="text-sm font-mono font-bold text-slate-900 dark:text-white mt-0.5">{admitCard.rollNumber}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Programme / Course</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">{admitCard.course}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Current Semester</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">Semester {admitCard.semester}</p>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Examination Session</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200 mt-0.5">{admitCard.examTitle}</p>
+                    </div>
+                    <div className="col-span-2 sm:col-span-3 p-3 rounded-xl bg-slate-50 dark:bg-navy-800/60 border border-slate-200 dark:border-navy-700">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Allotted Exam Center</p>
+                          <p className="font-bold text-slate-900 dark:text-white text-xs">{admitCard.examCenter}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hall & Seating</p>
+                          <p className="font-mono font-black text-brand-600 dark:text-brand-400 text-xs">
+                            {admitCard.allottedHall} • {admitCard.allottedDesk}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Photo with selected aspect ratio */}
+                  <div className="flex flex-col items-center justify-center">
+                    <div
+                      className={`relative rounded-xl border-2 border-slate-400 dark:border-navy-600 overflow-hidden bg-slate-100 dark:bg-navy-800 shadow-md flex items-center justify-center ${
+                        admitCard.photoFormat === 'STAMP_SIZE' ? 'w-[75px] h-[90px]' : 'w-[105px] h-[135px]'
+                      }`}
+                    >
+                      {admitCard.avatar ? (
+                        <img src={admitCard.avatar} alt="Candidate" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="text-center p-2">
+                          <GraduationCap className="w-8 h-8 text-slate-400 mx-auto mb-1" />
+                          <span className="text-[9px] font-bold text-slate-400">OFFICIAL PHOTO</span>
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-400 mt-2 font-mono">
+                      {admitCard.photoFormat === 'STAMP_SIZE' ? '25×30mm' : '35×45mm'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Exam Timetable Schedule */}
+                <div className="mb-6">
+                  <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-3">
+                    Course Schedule & Invigilator Sign-Off
+                  </h4>
+                  <div className="overflow-x-auto border border-slate-200 dark:border-navy-800 rounded-xl">
+                    <table className="w-full text-left text-xs border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50 dark:bg-navy-800 text-[11px] font-bold text-slate-600 dark:text-slate-300 border-b border-slate-200 dark:border-navy-800">
+                          <th className="py-2.5 px-3">Subject Name</th>
+                          <th className="py-2.5 px-3">Code</th>
+                          <th className="py-2.5 px-3">Date</th>
+                          <th className="py-2.5 px-3">Time</th>
+                          <th className="py-2.5 px-3">Room</th>
+                          <th className="py-2.5 px-3 text-center">Invigilator Sign</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
+                        {admitCard.schedules?.map((s, idx) => (
+                          <tr key={idx}>
+                            <td className="py-2.5 px-3 font-semibold text-slate-900 dark:text-white">{s.subjectName}</td>
+                            <td className="py-2.5 px-3 font-mono text-slate-500">{s.subjectCode}</td>
+                            <td className="py-2.5 px-3">{new Date(s.examDate).toLocaleDateString()}</td>
+                            <td className="py-2.5 px-3 text-slate-500">{s.time}</td>
+                            <td className="py-2.5 px-3 font-mono">{s.hall}</td>
+                            <td className="py-2.5 px-3 text-center">
+                              <span className="inline-block w-24 h-6 border-b border-dotted border-slate-400"></span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                {/* Rules & Signatures */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t border-slate-200 dark:border-navy-800 text-xs">
+                  <div className="md:col-span-2">
+                    <h5 className="text-[11px] font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-1.5">
+                      Instructions for the Candidate:
+                    </h5>
+                    <ul className="list-disc pl-4 space-y-1 text-[11px] text-slate-600 dark:text-slate-400">
+                      {admitCard.instructions?.map((inst, i) => (
+                        <li key={i}>{inst}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="flex flex-col justify-end items-center text-center">
+                    <div className="w-28 h-10 border-b-2 border-slate-900 dark:border-white mb-2 flex items-center justify-center font-serif italic text-brand-600 font-bold text-sm">
+                      Dr. K. S. Verma
+                    </div>
+                    <p className="text-[10px] font-black uppercase text-slate-900 dark:text-white">
+                      Controller of Examinations
+                    </p>
+                    <p className="text-[9px] text-slate-400">SG Tech University</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="p-8 text-center text-slate-400 bg-white dark:bg-navy-900 rounded-2xl border border-slate-200 dark:border-navy-800">
+              Select an examination session above to view or print your official admit card.
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 3. REVALUATION & RE-CHECKING PORTAL TAB */}
+      {/* ========================================================================= */}
+      {activeTab === 'revaluation' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Paper Revaluation & Grade Appeal Service
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Apply for answer paper re-evaluation, recount of marks, or certified evaluated answer script photocopy.
+              </p>
+            </div>
+            {!isStaff && (
+              <Button variant="primary" size="sm" onClick={() => setIsApplyRevalOpen(true)} icon={Plus}>
+                Apply Revaluation
+              </Button>
+            )}
+          </div>
+
+          <div className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-soft">
+            {loadingReval ? (
+              <div className="p-8 text-center text-slate-400">Loading revaluation records...</div>
+            ) : revaluations.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse text-xs">
+                  <thead>
+                    <tr className="border-b border-slate-100 dark:border-navy-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      <th className="pb-3 px-3">Student</th>
+                      <th className="pb-3 px-3">Subject</th>
+                      <th className="pb-3 px-3">Type</th>
+                      <th className="pb-3 px-3">Original Marks</th>
+                      <th className="pb-3 px-3">Revised Marks</th>
+                      <th className="pb-3 px-3">Fee Status</th>
+                      <th className="pb-3 px-3">Status</th>
+                      {isStaff && <th className="pb-3 px-3 text-right">Action</th>}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
-                    {results.map((res) => {
-                      const gd = getGradeDetails(res.obtainedMarks);
-                      return (
-                        <tr key={res._id} className="hover:bg-slate-50/50 dark:hover:bg-navy-800/40">
-                          {isStaff && (
-                            <td className="px-5 py-3 font-semibold text-slate-800 dark:text-slate-200">
-                              {res.studentId?.fullName} ({res.studentId?.registrationNumber})
-                            </td>
+                    {revaluations.map((rev) => (
+                      <tr key={rev._id} className="hover:bg-slate-50/50 dark:hover:bg-navy-800/50">
+                        <td className="py-3 px-3 font-semibold text-slate-900 dark:text-white">
+                          {rev.studentId?.fullName || 'Student'} ({rev.studentId?.registrationNumber || 'N/A'})
+                        </td>
+                        <td className="py-3 px-3 text-slate-700 dark:text-slate-300">
+                          {rev.subjectId?.name || 'Subject'} ({rev.subjectId?.code || 'N/A'})
+                        </td>
+                        <td className="py-3 px-3 font-medium text-slate-600 dark:text-slate-400">{rev.type}</td>
+                        <td className="py-3 px-3 font-mono font-bold">{rev.originalMarks} / 100</td>
+                        <td className="py-3 px-3 font-mono font-bold">
+                          {rev.revisedMarks !== undefined ? (
+                            <span className="text-emerald-600 dark:text-emerald-400">{rev.revisedMarks} / 100</span>
+                          ) : (
+                            <span className="text-slate-400">Pending</span>
                           )}
-                          <td className="px-5 py-3 font-medium text-slate-700 dark:text-slate-300">
-                            {res.subjectId?.name || 'Academic Subject'}
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400">
+                            ₹{rev.feeAmount} PAID
+                          </span>
+                        </td>
+                        <td className="py-3 px-3">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                              rev.status === 'MARKS_REVISED'
+                                ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                                : rev.status === 'NO_CHANGE'
+                                ? 'bg-slate-100 text-slate-700 dark:bg-navy-800 dark:text-slate-300'
+                                : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                            }`}
+                          >
+                            {rev.status}
+                          </span>
+                        </td>
+                        {isStaff && (
+                          <td className="py-3 px-3 text-right">
+                            <button
+                              onClick={() => {
+                                setSelectedRevalToEdit(rev);
+                                setRevalEditForm({
+                                  status: rev.status === 'APPLIED' ? 'MARKS_REVISED' : rev.status,
+                                  revisedMarks: rev.revisedMarks || rev.originalMarks + 4,
+                                  evaluatorRemarks: rev.evaluatorRemarks || 'Marks verified and awarded for solution clarity.',
+                                });
+                              }}
+                              className="text-brand-500 hover:text-brand-600 font-bold"
+                            >
+                              Evaluate / Revise
+                            </button>
                           </td>
-                          <td className="px-5 py-3 font-mono font-semibold text-slate-600 dark:text-slate-400">
-                            {res.subjectId?.credits || 4}
-                          </td>
-                          <td className="px-5 py-3 font-mono font-bold text-slate-900 dark:text-white">
-                            {res.obtainedMarks} / {res.maxMarks || 100}
-                          </td>
-                          <td className="px-5 py-3">
-                            <span className="px-2.5 py-1 rounded-lg text-xs font-black bg-brand-50 text-brand-700 dark:bg-navy-950 dark:text-brand-300 border border-brand-200 dark:border-navy-700">
-                              {gd.grade} ({gd.point}.0)
-                            </span>
-                          </td>
-                          <td className="px-5 py-3">
-                            <StatusBadge status={res.obtainedMarks >= 40 ? 'PUBLISHED' : 'FAILED'} />
-                          </td>
-                          {isStaff && (
-                            <td className="px-5 py-3 text-right">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => openTranscriptModal(res)}
-                                icon={FileText}
-                              >
-                                Transcript
-                              </Button>
-                            </td>
-                          )}
-                        </tr>
-                      );
-                    })}
+                        )}
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
+              </div>
+            ) : (
+              <div className="py-12 text-center text-slate-400">
+                No active revaluation applications found in this session.
               </div>
             )}
           </div>
         </div>
       )}
 
-      {/* OFFICIAL SEMESTER GRADE SHEET & ACADEMIC TRANSCRIPT MODAL */}
-      <Modal
-        isOpen={isTranscriptOpen}
-        onClose={() => setIsTranscriptOpen(false)}
-        title="Official Semester Grade Report & Academic Transcript"
-        subtitle="Office of the Registrar & Controller of Examinations"
-      >
-        <div className="space-y-4">
-          {/* Printable Official Paper */}
-          <div
-            id="printable-grade-sheet"
-            className="p-6 sm:p-8 rounded-2xl bg-white dark:bg-navy-950 text-slate-800 dark:text-slate-100 border-2 border-slate-300 dark:border-navy-800 shadow-xl space-y-4 text-xs select-none relative overflow-hidden"
-          >
-            {/* Watermark SG */}
-            <div className="absolute right-4 bottom-12 text-[140px] font-black text-slate-900/5 dark:text-white/5 pointer-events-none select-none">
-              SGTU
+      {/* ========================================================================= */}
+      {/* 4. BACKLOGS & REMEDIAL EXAMS TAB */}
+      {/* ========================================================================= */}
+      {activeTab === 'backlogs' && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Supplementary & Backlog Paper Management
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Auto-detected failed modules (&lt; 40 marks), repeat attempts, and remedial examination scheduling.
+              </p>
+            </div>
+            <div className="text-right">
+              <span className="text-xs text-slate-400 font-bold">Standard Supplementary Fee:</span>
+              <span className="ml-2 font-mono font-black text-brand-600 dark:text-brand-400 text-sm">
+                ₹{backlogData.feePerSubject} / Subject
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Arrear Subjects Detected */}
+            <div className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-soft">
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 text-rose-500" />
+                <span>Detected Arrear Modules (Needs Remedial Clearance)</span>
+              </h4>
+
+              {loadingBacklogs ? (
+                <div className="p-6 text-center text-slate-400">Scanning evaluation database...</div>
+              ) : backlogData.backlogs?.length > 0 ? (
+                <div className="space-y-3">
+                  {backlogData.backlogs.map((b) => (
+                    <div
+                      key={b._id}
+                      className="p-3.5 rounded-xl border border-rose-200 dark:border-rose-950/60 bg-rose-50/50 dark:bg-rose-950/20 flex items-center justify-between"
+                    >
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">
+                          {b.subjectId?.name || 'Subject Module'}
+                        </p>
+                        <p className="text-[11px] text-slate-500 font-mono">
+                          {b.subjectId?.code || 'CS602'} • Previous Score: <strong className="text-rose-600">{b.obtainedMarks}/100 ({b.grade})</strong>
+                        </p>
+                      </div>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedBacklogSubject(b);
+                          setIsRegisterBacklogOpen(true);
+                        }}
+                      >
+                        Register Arrear
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-6 text-center text-slate-400 border border-dashed border-slate-200 dark:border-navy-800 rounded-xl">
+                  <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Clean Academic Record!</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    No active failed or arrear subjects detected. All enrolled subjects have achieved passing grade.
+                  </p>
+                </div>
+              )}
             </div>
 
-            {/* University Letterhead */}
-            <div className="text-center border-b-2 border-brand-600 pb-3 space-y-1">
-              <div className="flex items-center justify-center gap-2">
-                <div className="w-10 h-10 rounded-xl bg-brand-600 text-white font-black text-base flex items-center justify-center shadow-md">
-                  SG
+            {/* Registered Supplementary Examinations */}
+            <div className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-soft">
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                <Layers className="w-4 h-4 text-brand-500" />
+                <span>Confirmed Supplementary Registrations</span>
+              </h4>
+
+              {backlogData.registrations?.length > 0 ? (
+                <div className="space-y-3">
+                  {backlogData.registrations.map((reg) => (
+                    <div
+                      key={reg._id}
+                      className="p-3.5 rounded-xl border border-slate-200 dark:border-navy-800 bg-slate-50 dark:bg-navy-800/60 flex items-center justify-between"
+                    >
+                      <div>
+                        <p className="text-xs font-bold text-slate-900 dark:text-white">
+                          {reg.subjectId?.name || 'Subject Module'} ({reg.subjectId?.code || 'N/A'})
+                        </p>
+                        <p className="text-[11px] text-slate-500">
+                          Semester {reg.semester} • Attempt #{reg.attemptNumber || 2} • Fee: ₹{reg.registrationFee}
+                        </p>
+                      </div>
+                      <span className="text-[11px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300">
+                        {reg.status}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <div className="text-left">
-                  <h3 className="text-lg font-black tracking-tight text-slate-900 dark:text-white leading-none">
-                    SG TECH UNIVERSITY
-                  </h3>
-                  <p className="text-[10px] text-brand-600 dark:text-brand-400 font-bold tracking-widest uppercase">
-                    Smart Generation • Controller of Examinations
+              ) : (
+                <div className="p-6 text-center text-slate-400 border border-dashed border-slate-200 dark:border-navy-800 rounded-xl">
+                  No pending supplementary registrations found.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* 5. MARKS MODERATION & BELL CURVE TAB (STAFF) */}
+      {/* ========================================================================= */}
+      {activeTab === 'moderation' && isStaff && selectedExam && (
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                Statistical Marks Moderation & Bell Curve Analytics
+              </h3>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Standardize evaluation deviations, inspect normal score distribution, and apply regulated grace marks.
+              </p>
+            </div>
+          </div>
+
+          {loadingModeration ? (
+            <div className="p-8 text-center text-slate-400">Computing cohort statistics...</div>
+          ) : moderationData ? (
+            <>
+              {/* Metric Cards */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-soft">
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Cohort Average</p>
+                  <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                    {moderationData.average} <span className="text-xs font-normal text-slate-400">/ 100</span>
+                  </p>
+                </div>
+                <div className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-soft">
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pass Percentage</p>
+                  <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
+                    {moderationData.passPercentage}%
+                  </p>
+                </div>
+                <div className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-soft">
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Highest / Lowest</p>
+                  <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                    {moderationData.highest} <span className="text-xs font-normal text-slate-400">/ {moderationData.lowest}</span>
+                  </p>
+                </div>
+                <div className="p-4 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-soft">
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Borderline Candidates</p>
+                  <p className="text-2xl font-black text-amber-500 mt-1">
+                    {moderationData.borderlineCount}
                   </p>
                 </div>
               </div>
-              <p className="text-[9px] text-slate-400">
-                Established Under State University Act • Electronic City, Bangalore, Karnataka - 560100
-              </p>
-              <div className="inline-block px-4 py-0.5 rounded-full bg-slate-100 dark:bg-navy-900 text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 mt-1">
-                Semester Grade Performance Card (CBCS)
-              </div>
-            </div>
 
-            {/* Candidate Metadata */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-xl bg-slate-50 dark:bg-navy-900 border border-slate-200 dark:border-navy-800 text-[11px]">
-              <div>
-                <span className="text-slate-400 block text-[9px] uppercase font-bold">Student Name:</span>
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {transcriptCandidate?.fullName || user?.name || 'Aarav Sharma'}
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-400 block text-[9px] uppercase font-bold">University Reg No:</span>
-                <span className="font-mono font-bold text-brand-600 dark:text-brand-400">
-                  {transcriptCandidate?.registrationNumber || 'SGTU2024CS001'}
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-400 block text-[9px] uppercase font-bold">Degree Program:</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">
-                  B.Tech (Computer Science & Eng.)
-                </span>
-              </div>
-              <div>
-                <span className="text-slate-400 block text-[9px] uppercase font-bold">Semester / Session:</span>
-                <span className="font-bold text-slate-800 dark:text-slate-200">
-                  Semester 6 • 2026-27
-                </span>
-              </div>
-            </div>
-
-            {/* Course Grade Table */}
-            <div className="border border-slate-200 dark:border-navy-800 rounded-xl overflow-hidden">
-              <table className="w-full text-left text-[11px]">
-                <thead className="bg-slate-100 dark:bg-navy-900 font-bold text-slate-500 uppercase text-[9px]">
-                  <tr>
-                    <th className="px-3 py-2">Subject Code & Title</th>
-                    <th className="px-3 py-2 text-center">Credits</th>
-                    <th className="px-3 py-2 text-center">Int (40)</th>
-                    <th className="px-3 py-2 text-center">Ext (60)</th>
-                    <th className="px-3 py-2 text-center">Total (100)</th>
-                    <th className="px-3 py-2 text-center">Letter Grade</th>
-                    <th className="px-3 py-2 text-center">Grade Point</th>
-                    <th className="px-3 py-2 text-right">Earned Points</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
-                  {transcriptRows.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/50 dark:hover:bg-navy-900/50">
-                      <td className="px-3 py-1.5 font-medium">
-                        <span className="font-mono text-slate-400 mr-1.5 font-bold">[{row.code}]</span>
-                        {row.title}
-                      </td>
-                      <td className="px-3 py-1.5 text-center font-mono">{row.credits}</td>
-                      <td className="px-3 py-1.5 text-center font-mono">{row.internal}</td>
-                      <td className="px-3 py-1.5 text-center font-mono">{row.external}</td>
-                      <td className="px-3 py-1.5 text-center font-mono font-bold text-slate-900 dark:text-white">
-                        {row.total}
-                      </td>
-                      <td className="px-3 py-1.5 text-center font-bold text-brand-600 dark:text-brand-400">
-                        {row.grade}
-                      </td>
-                      <td className="px-3 py-1.5 text-center font-mono">{row.point}</td>
-                      <td className="px-3 py-1.5 text-right font-mono font-bold">{row.creditPoints}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* GPA Summary Strip */}
-            <div className="grid grid-cols-3 gap-3 p-3 bg-brand-50/70 dark:bg-navy-900 rounded-xl border border-brand-200 dark:border-navy-800 text-center">
-              <div>
-                <span className="text-slate-400 block text-[9px] uppercase font-bold">Total Semester Credits</span>
-                <span className="text-base font-black text-slate-800 dark:text-slate-200 font-mono">
-                  {totalCredits} Credits
-                </span>
-              </div>
-              <div className="border-x border-slate-200 dark:border-navy-800">
-                <span className="text-brand-600 dark:text-brand-400 block text-[9px] uppercase font-bold">Semester GPA (SGPA)</span>
-                <span className="text-xl font-black text-brand-600 dark:text-brand-400 font-mono">
-                  {calculatedSgpa} / 10.0
-                </span>
-              </div>
-              <div>
-                <span className="text-emerald-600 dark:text-emerald-400 block text-[9px] uppercase font-bold">Cumulative GPA (CGPA)</span>
-                <span className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
-                  {calculatedCgpa} / 10.0
-                </span>
-              </div>
-            </div>
-
-            {/* Signatures & Seal */}
-            <div className="pt-3 flex items-end justify-between text-[10px] text-slate-400">
-              <div className="flex items-center gap-2">
-                <QrCode className="w-12 h-12 text-slate-800 dark:text-slate-200" />
-                <div>
-                  <span className="font-mono block text-[9px] font-bold">DIGITAL CERTIFICATE VERIFICATION</span>
-                  <span className="text-[8px]">Authenticated via SGTU Central Blockchain Registry</span>
+              {/* Bell Curve Distribution Visualizer */}
+              <div className="p-6 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-soft">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                  <BarChart2 className="w-4 h-4 text-brand-500" />
+                  <span>CBCS Grade Frequency Distribution (Bell Curve)</span>
+                </h4>
+                <div className="grid grid-cols-7 gap-2 items-end h-44 pt-4 border-b border-slate-100 dark:border-navy-800 pb-2">
+                  {Object.entries(moderationData.distribution || {}).map(([grade, count]) => {
+                    const maxVal = Math.max(...Object.values(moderationData.distribution || { a: 1 }), 1);
+                    const heightPct = Math.max(12, Math.round((count / maxVal) * 100));
+                    return (
+                      <div key={grade} className="flex flex-col items-center h-full justify-end group">
+                        <span className="text-[10px] font-mono font-bold text-slate-400 mb-1">{count}</span>
+                        <div
+                          style={{ height: `${heightPct}%` }}
+                          className={`w-full rounded-t-lg transition-all ${
+                            grade === 'F'
+                              ? 'bg-rose-500'
+                              : grade === 'O' || grade === 'A+'
+                              ? 'bg-emerald-500'
+                              : 'bg-brand-500'
+                          }`}
+                        ></div>
+                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 mt-2">{grade}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="text-center space-y-0.5">
-                <div className="font-serif italic text-sm text-brand-600 dark:text-brand-400 font-bold">
-                  Dr. K. Venkatraman
+              {/* Grace Marks Regulatory Tool */}
+              <div className="p-6 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800/60 shadow-soft">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div>
+                    <h4 className="text-sm font-bold text-amber-900 dark:text-amber-200 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-amber-500" />
+                      <span>Regulated Grace Marks & Boundary Elevation Engine</span>
+                    </h4>
+                    <p className="text-xs text-amber-700 dark:text-amber-300 mt-1 max-w-xl">
+                      Automatically award compensatory marks to candidates scoring within the academic boundary (e.g. 36-39) to achieve the 40 passing threshold under University Examination Bylaw 14.3.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1 text-xs font-bold text-slate-700 dark:text-slate-300">
+                      <span>Max Grace:</span>
+                      <input
+                        type="number"
+                        min="1"
+                        max="5"
+                        value={graceMarksInput}
+                        onChange={(e) => setGraceMarksInput(e.target.value)}
+                        className="w-14 px-2 py-1 rounded border border-slate-300 dark:border-navy-700 bg-white dark:bg-navy-900 text-center font-bold"
+                      />
+                    </div>
+                    <Button variant="primary" size="sm" onClick={handleApplyGraceMarks} isLoading={actionLoading}>
+                      Apply Grace Marks
+                    </Button>
+                  </div>
                 </div>
-                <span className="font-bold text-slate-900 dark:text-white block text-[9px]">
-                  Registrar & Controller of Examinations
-                </span>
-                <span className="text-[8px]">SG Tech University</span>
-              </div>
-            </div>
-          </div>
 
-          {/* Modal Actions */}
-          <div className="flex justify-end gap-2">
-            <Button variant="secondary" size="sm" onClick={() => window.print()} icon={Printer}>
-              Print Official Transcript / PDF
-            </Button>
-            <Button variant="primary" size="sm" onClick={() => setIsTranscriptOpen(false)}>
-              Close
-            </Button>
-          </div>
+                {moderationData.borderlineCandidates?.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-amber-200 dark:border-amber-800/60">
+                    <p className="text-xs font-bold text-amber-900 dark:text-amber-200 mb-2">
+                      Candidates Eligible for Elevation:
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {moderationData.borderlineCandidates.map((c, i) => (
+                        <span
+                          key={i}
+                          className="px-2.5 py-1 rounded-lg bg-white dark:bg-navy-900 border border-amber-200 dark:border-amber-800 text-[11px] font-semibold text-slate-800 dark:text-slate-200 shadow-sm"
+                        >
+                          {c.studentName} ({c.regNo}) • {c.subject}: <strong>{c.marks}/100</strong>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : null}
         </div>
-      </Modal>
+      )}
 
-      {/* Enter Marks Modal */}
-      <Modal
-        isOpen={isMarksModalOpen}
-        onClose={() => setIsMarksModalOpen(false)}
-        title="Enter Final Examination Marks"
-        subtitle={`Exam: ${selectedExam?.title}`}
-      >
-        <form onSubmit={handleSaveMarks} className="space-y-4 text-xs">
+      {/* ========================================================================= */}
+      {/* MODALS */}
+      {/* ========================================================================= */}
+
+      {/* Revaluation Application Modal */}
+      <Modal isOpen={isApplyRevalOpen} onClose={() => setIsApplyRevalOpen(false)} title="Apply for Paper Revaluation">
+        <form onSubmit={handleApplyReval} className="space-y-4">
           <div>
-            <label className="block font-semibold mb-1">Subject *</label>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Select Subject</label>
             <select
-              value={selectedSubjectId}
-              onChange={(e) => setSelectedSubjectId(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-xl"
+              value={revalForm.subjectId}
+              onChange={(e) => setRevalForm({ ...revalForm, subjectId: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-xs font-semibold"
+              required
             >
               {subjects.map((sub) => (
                 <option key={sub._id} value={sub._id}>
-                  {sub.code} - {sub.name} (Sem {sub.semester})
+                  {sub.name} ({sub.code})
                 </option>
               ))}
             </select>
           </div>
 
-          <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Application Type</label>
+            <select
+              value={revalForm.type}
+              onChange={(e) => setRevalForm({ ...revalForm, type: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-xs font-semibold"
+            >
+              <option value="REVALUATION">Full Paper Revaluation (₹500)</option>
+              <option value="RECHECKING">Re-totalling & Rechecking (₹300)</option>
+              <option value="PHOTOCOPY">Certified Answer Script Copy (₹250)</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Originally Awarded Marks</label>
+            <input
+              type="number"
+              value={revalForm.originalMarks}
+              onChange={(e) => setRevalForm({ ...revalForm, originalMarks: e.target.value })}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-xs font-semibold"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Reason for Re-evaluation</label>
+            <textarea
+              rows={3}
+              value={revalForm.reason}
+              onChange={(e) => setRevalForm({ ...revalForm, reason: e.target.value })}
+              placeholder="State question numbers where discrepancies exist..."
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-xs"
+              required
+            ></textarea>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-800 text-xs text-slate-600 dark:text-slate-400 flex items-center justify-between">
+            <span>Revaluation Processing Fee:</span>
+            <span className="font-bold text-slate-900 dark:text-white">₹500.00</span>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" size="sm" type="button" onClick={() => setIsApplyRevalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" size="sm" type="submit" isLoading={actionLoading}>
+              Confirm & Pay Fee
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Staff Revaluation Status Editor Modal */}
+      <Modal
+        isOpen={!!selectedRevalToEdit}
+        onClose={() => setSelectedRevalToEdit(null)}
+        title="Evaluate Revaluation Application"
+      >
+        {selectedRevalToEdit && (
+          <form onSubmit={handleUpdateRevalStatus} className="space-y-4">
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-800 text-xs">
+              <p>
+                Student: <strong>{selectedRevalToEdit.studentId?.fullName}</strong> ({selectedRevalToEdit.studentId?.registrationNumber})
+              </p>
+              <p className="mt-1">
+                Subject: <strong>{selectedRevalToEdit.subjectId?.name}</strong> • Original Score:{' '}
+                <strong>{selectedRevalToEdit.originalMarks} / 100</strong>
+              </p>
+              <p className="mt-1 text-slate-500 italic">"{selectedRevalToEdit.reason}"</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Decision Status</label>
+              <select
+                value={revalEditForm.status}
+                onChange={(e) => setRevalEditForm({ ...revalEditForm, status: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-xs font-semibold"
+              >
+                <option value="MARKS_REVISED">MARKS REVISED (Award Updated Score)</option>
+                <option value="NO_CHANGE">NO CHANGE (Original Marks Upheld)</option>
+                <option value="UNDER_EVALUATION">UNDER EVALUATION (Assigned to Expert)</option>
+                <option value="REJECTED">REJECTED (Grounds Invalid)</option>
+              </select>
+            </div>
+
+            {revalEditForm.status === 'MARKS_REVISED' && (
+              <div>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                  Updated Revised Marks (/100)
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={revalEditForm.revisedMarks}
+                  onChange={(e) => setRevalEditForm({ ...revalEditForm, revisedMarks: e.target.value })}
+                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-xs font-semibold"
+                  required
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                Evaluator Official Remarks
+              </label>
+              <textarea
+                rows={2}
+                value={revalEditForm.evaluatorRemarks}
+                onChange={(e) => setRevalEditForm({ ...revalEditForm, evaluatorRemarks: e.target.value })}
+                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-xs"
+                required
+              ></textarea>
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="secondary" size="sm" type="button" onClick={() => setSelectedRevalToEdit(null)}>
+                Cancel
+              </Button>
+              <Button variant="primary" size="sm" type="submit" isLoading={actionLoading}>
+                Update Official Grade
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* Backlog Registration Modal */}
+      <Modal
+        isOpen={isRegisterBacklogOpen}
+        onClose={() => setIsRegisterBacklogOpen(false)}
+        title="Confirm Supplementary Exam Registration"
+      >
+        {selectedBacklogSubject && (
+          <form onSubmit={handleRegisterBacklog} className="space-y-4">
+            <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-900 dark:text-amber-200">
+              <p className="font-bold text-sm">
+                {selectedBacklogSubject.subjectId?.name || 'Selected Subject'}
+              </p>
+              <p className="mt-1">
+                Code: {selectedBacklogSubject.subjectId?.code || 'CS602'} • Previous Score:{' '}
+                {selectedBacklogSubject.obtainedMarks}/100 ({selectedBacklogSubject.grade})
+              </p>
+            </div>
+
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-navy-800 text-xs text-slate-600 dark:text-slate-400 flex items-center justify-between">
+              <span>Supplementary Exam Fee:</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-white">₹750.00</span>
+            </div>
+
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Upon confirmation, your hall ticket for the supplementary examination session will be automatically generated.
+            </p>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button variant="secondary" size="sm" type="button" onClick={() => setIsRegisterBacklogOpen(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" size="sm" type="submit" isLoading={actionLoading}>
+                Confirm Registration (₹750)
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
+
+      {/* Marks Entry Modal (Staff) */}
+      <Modal isOpen={isMarksModalOpen} onClose={() => setIsMarksModalOpen(false)} title="Batch Subject Marks Entry">
+        <form onSubmit={handleSaveMarks} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Subject</label>
+            <select
+              value={selectedSubjectId}
+              onChange={(e) => setSelectedSubjectId(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-navy-800 bg-white dark:bg-navy-900 text-xs font-semibold"
+            >
+              {subjects.map((sub) => (
+                <option key={sub._id} value={sub._id}>
+                  {sub.name} ({sub.code})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="max-h-72 overflow-y-auto space-y-2 pr-1">
             {studentRoster.map((s) => (
               <div
                 key={s._id}
-                className="flex items-center justify-between p-2 rounded-xl bg-slate-50 dark:bg-navy-950 border border-slate-100 dark:border-navy-800"
+                className="flex items-center justify-between p-2.5 rounded-xl border border-slate-100 dark:border-navy-800 bg-slate-50 dark:bg-navy-800/40"
               >
                 <div>
-                  <span className="font-bold text-slate-800 dark:text-slate-200 block">
-                    {s.fullName}
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-mono">
-                    {s.registrationNumber}
-                  </span>
+                  <p className="text-xs font-bold text-slate-900 dark:text-white">{s.fullName}</p>
+                  <p className="text-[11px] text-slate-400 font-mono">{s.registrationNumber}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-slate-400 text-[11px]">Marks (out of 100):</span>
                   <input
                     type="number"
                     min="0"
                     max="100"
-                    value={marksState[s._id] || 0}
-                    onChange={(e) =>
-                      setMarksState({
-                        ...marksState,
-                        [s._id]: e.target.value,
-                      })
-                    }
-                    className="w-16 px-2 py-1 text-center font-mono font-bold bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 rounded-lg"
+                    value={marksState[s._id] ?? ''}
+                    onChange={(e) => setMarksState({ ...marksState, [s._id]: e.target.value })}
+                    className="w-20 px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-navy-700 bg-white dark:bg-navy-900 text-xs text-right font-bold"
                   />
+                  <span className="text-xs text-slate-400">/ 100</span>
                 </div>
               </div>
             ))}
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-navy-800">
-            <Button variant="secondary" type="button" onClick={() => setIsMarksModalOpen(false)}>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="secondary" size="sm" type="button" onClick={() => setIsMarksModalOpen(false)}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit" isLoading={actionLoading} icon={Check}>
-              Submit Marks
+            <Button variant="primary" size="sm" type="submit" isLoading={actionLoading}>
+              Save Marks
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Official Institutional Grade Sheet Transcript Modal */}
+      <Modal isOpen={isTranscriptOpen} onClose={() => setIsTranscriptOpen(false)} title="Institutional Grade Transcript">
+        {transcriptCandidate && (
+          <div className="space-y-6">
+            <div className="p-8 rounded-2xl bg-white text-slate-900 border-2 border-slate-800 shadow-xl print:m-0 print:border-none print:shadow-none text-xs font-sans">
+              <div className="text-center border-b-2 border-slate-900 pb-4 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-brand-600 text-white flex items-center justify-center font-black text-xl mx-auto mb-2">
+                  SG
+                </div>
+                <h2 className="text-lg font-black uppercase tracking-tight">SG Tech University (SGTU)</h2>
+                <p className="text-[11px] font-bold text-slate-600 uppercase tracking-widest">
+                  Official Grade Sheet & Cumulative Credit Transcript
+                </p>
+                <p className="text-[10px] text-slate-500">Autonomous Institution • CBCS Semester System</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 mb-4 text-[11px] bg-slate-50 p-3 rounded-lg border border-slate-200">
+                <div>
+                  <span className="text-slate-500 font-semibold">Student Name:</span>{' '}
+                  <strong className="text-slate-900">{transcriptCandidate.fullName}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-500 font-semibold">Registration No:</span>{' '}
+                  <strong className="font-mono text-slate-900">{transcriptCandidate.registrationNumber}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-500 font-semibold">Programme:</span>{' '}
+                  <strong className="text-slate-900">{transcriptCandidate.course}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-500 font-semibold">Semester:</span>{' '}
+                  <strong className="text-slate-900">Semester {transcriptCandidate.semester} (Final)</strong>
+                </div>
+              </div>
+
+              <div className="overflow-x-auto border border-slate-300 rounded-lg mb-4">
+                <table className="w-full text-left border-collapse text-[11px]">
+                  <thead>
+                    <tr className="bg-slate-100 border-b border-slate-300 font-bold text-slate-700">
+                      <th className="py-2 px-2.5">Code</th>
+                      <th className="py-2 px-2.5">Course Title</th>
+                      <th className="py-2 px-2.5 text-center">Credits</th>
+                      <th className="py-2 px-2.5 text-center">Marks</th>
+                      <th className="py-2 px-2.5 text-center">Grade</th>
+                      <th className="py-2 px-2.5 text-center">Grade Point</th>
+                      <th className="py-2 px-2.5 text-right">Credit Points</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {transcriptRows.map((r, i) => (
+                      <tr key={i}>
+                        <td className="py-2 px-2.5 font-mono font-semibold">{r.code}</td>
+                        <td className="py-2 px-2.5 font-medium">{r.title}</td>
+                        <td className="py-2 px-2.5 text-center">{r.credits}</td>
+                        <td className="py-2 px-2.5 text-center font-bold">{r.total}</td>
+                        <td className="py-2 px-2.5 text-center font-black text-brand-600">{r.grade}</td>
+                        <td className="py-2 px-2.5 text-center font-mono">{r.point}</td>
+                        <td className="py-2 px-2.5 text-right font-mono font-bold">{r.creditPoints}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3 p-3 bg-slate-900 text-white rounded-lg text-center mb-6">
+                <div>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">Total Credits</p>
+                  <p className="text-base font-black">{totalCredits}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">Semester SGPA</p>
+                  <p className="text-base font-black text-emerald-400">{calculatedSgpa}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">Cumulative CGPA</p>
+                  <p className="text-base font-black text-brand-400">{calculatedCgpa}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-4 border-t border-slate-300 text-[10px] text-slate-500">
+                <div className="flex items-center gap-2">
+                  <QrCode className="w-8 h-8 text-slate-700" />
+                  <span>Verified Blockchain Transcript Hash: 0x7f9a...c92b</span>
+                </div>
+                <div className="text-right">
+                  <div className="font-serif italic text-slate-800 font-bold text-xs">Registrar (Evaluation)</div>
+                  <p className="text-[9px] uppercase font-bold text-slate-600">Seal of SG Tech University</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" size="sm" onClick={() => setIsTranscriptOpen(false)}>
+                Close
+              </Button>
+              <Button variant="primary" size="sm" onClick={() => window.print()} icon={Printer}>
+                Print Official Marksheet
+              </Button>
+            </div>
+          </div>
+        )}
       </Modal>
     </div>
   );

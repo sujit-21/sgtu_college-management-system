@@ -30,6 +30,7 @@ import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { Button } from '../../components/ui/Button';
+import { Modal } from '../../components/ui/Modal';
 
 // Role Category Definitions for Identity Cards
 const ROLE_CATEGORIES = [
@@ -72,6 +73,27 @@ export const CertificatesPage = () => {
   const [modalPhotoFormat, setModalPhotoFormat] = useState('PASSPORT_SIZE'); // 'PASSPORT_SIZE' | 'STAMP_SIZE'
   const [savingPhoto, setSavingPhoto] = useState(false);
   const [adminSuccessMsg, setAdminSuccessMsg] = useState('');
+
+  // Public QR Verification Modal state
+  const [isVerifyModalOpen, setIsVerifyModalOpen] = useState(false);
+  const [verificationData, setVerificationData] = useState(null);
+  const [verifying, setVerifying] = useState(false);
+
+  const handleOpenVerification = async () => {
+    setIsVerifyModalOpen(true);
+    setVerifying(true);
+    try {
+      const certId = selectedMember?.collegeId || 'SGTU-2026-CS104';
+      const res = await api.get(`/certificates/verify/${certId}`);
+      if (res.data.success) {
+        setVerificationData(res.data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setVerifying(false);
+    }
+  };
 
   // Fetch members whenever category changes
   useEffect(() => {
@@ -259,6 +281,15 @@ export const CertificatesPage = () => {
         description="High-security university identity card system for Students, HODs, Faculties, Librarians, and Accountants with configurable Passport Size & Stamp Size photo formats."
       >
         <div className="flex items-center gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={handleOpenVerification}
+            icon={QrCode}
+          >
+            Verify Authenticity
+          </Button>
+
           {isAdmin && (
             <Button
               variant="outline"
@@ -1138,6 +1169,64 @@ export const CertificatesPage = () => {
           </div>
         </div>
       )}
+
+      {/* Public Tamper-Proof Certificate Verification Modal */}
+      <Modal
+        isOpen={isVerifyModalOpen}
+        onClose={() => setIsVerifyModalOpen(false)}
+        title="Public Certificate Verification Registry"
+      >
+        <div className="space-y-4 text-xs">
+          {verifying ? (
+            <div className="py-8 text-center text-slate-400">Verifying blockchain cryptographic signature...</div>
+          ) : verificationData ? (
+            <div className="p-5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 space-y-3">
+              <div className="flex items-center justify-between pb-3 border-b border-emerald-200 dark:border-emerald-800">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                  <span className="font-black text-sm text-emerald-900 dark:text-emerald-200">
+                    AUTHENTIC INSTITUTIONAL RECORD
+                  </span>
+                </div>
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-600 text-white font-mono font-bold">
+                  VALIDATED
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-slate-700 dark:text-slate-300">
+                <div>
+                  <span className="text-slate-400 font-semibold block text-[10px]">Issued By:</span>
+                  <strong className="text-slate-900 dark:text-white">{verificationData.issuer}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-400 font-semibold block text-[10px]">Accreditation:</span>
+                  <strong className="text-slate-900 dark:text-white">{verificationData.institutionAccreditation}</strong>
+                </div>
+                <div>
+                  <span className="text-slate-400 font-semibold block text-[10px]">Credential Number:</span>
+                  <span className="font-mono font-bold text-slate-900 dark:text-white">{verificationData.certificateNumber}</span>
+                </div>
+                <div>
+                  <span className="text-slate-400 font-semibold block text-[10px]">Blockchain Hash:</span>
+                  <span className="font-mono text-[11px] text-brand-600 dark:text-brand-400 truncate block">
+                    {verificationData.blockchainHash}
+                  </span>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-emerald-200/60 dark:border-emerald-800/60 text-[11px] text-slate-500">
+                Timestamp: {new Date(verificationData.timestamp).toLocaleString()} • Official Registry Ledger ID: SGTU-REG-2026
+              </div>
+            </div>
+          ) : null}
+
+          <div className="flex justify-end">
+            <Button variant="secondary" size="sm" onClick={() => setIsVerifyModalOpen(false)}>
+              Close Verification
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

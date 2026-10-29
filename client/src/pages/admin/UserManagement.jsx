@@ -25,6 +25,9 @@ import {
   UploadCloud,
   FileSpreadsheet,
   Check,
+  History,
+  TrendingUp,
+  ShieldAlert,
 } from 'lucide-react';
 import api from '../../services/api';
 import { PageHeader } from '../../components/layout/PageHeader';
@@ -58,6 +61,21 @@ export const UserManagement = () => {
   const [csvLoading, setCsvLoading] = useState(false);
   const [csvReport, setCsvReport] = useState(null);
   const [selectedUser, setSelectedUser] = useState(null);
+
+  // Sub-tab: 'users' | 'audit'
+  const [activeTab, setActiveTab] = useState('users');
+
+  // Audit Logs State
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [loadingAuditLogs, setLoadingAuditLogs] = useState(false);
+
+  // Batch Promotion State
+  const [isPromoteModalOpen, setIsPromoteModalOpen] = useState(false);
+  const [promoteForm, setPromoteForm] = useState({
+    fromSemester: 5,
+    toSemester: 6,
+    departmentCode: 'ALL',
+  });
 
   // Password visibility
   const [showPassword, setShowPassword] = useState(false);
@@ -131,6 +149,45 @@ export const UserManagement = () => {
     };
     fetchDepts();
   }, [roleFilter, statusFilter]);
+
+  const fetchAuditLogs = async () => {
+    setLoadingAuditLogs(true);
+    try {
+      const res = await api.get('/admin/audit-logs');
+      if (res.data.success) {
+        setAuditLogs(res.data.data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingAuditLogs(false);
+    }
+  };
+
+  const handleBatchPromote = async (e) => {
+    e.preventDefault();
+    if (!window.confirm(`Are you sure you want to promote all Semester ${promoteForm.fromSemester} students to Semester ${promoteForm.toSemester}?`)) return;
+    setActionLoading(true);
+    try {
+      const res = await api.post('/admin/batch-promote', promoteForm);
+      if (res.data.success) {
+        setNotification(res.data.message);
+        setIsPromoteModalOpen(false);
+        fetchUsers();
+        fetchAuditLogs();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to promote batch.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeTab === 'audit') {
+      fetchAuditLogs();
+    }
+  }, [activeTab]);
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
@@ -353,6 +410,15 @@ EMP-FAC-ME-05,Dr. Alok Verma,alok.verma@sgtu.edu,TEACHER,+91 98765 12003,Sgtu@Pa
 
           <Button
             variant="outline"
+            onClick={() => setIsPromoteModalOpen(true)}
+            className="flex items-center gap-1.5 border-brand-300 dark:border-brand-800 text-brand-600 dark:text-brand-400 text-xs font-bold"
+          >
+            <TrendingUp className="w-4 h-4" />
+            Batch Promotion Wizard
+          </Button>
+
+          <Button
+            variant="outline"
             onClick={exportUsersCSV}
             className="flex items-center gap-1.5 border-slate-300 dark:border-navy-700 text-xs"
           >
@@ -401,6 +467,33 @@ EMP-FAC-ME-05,Dr. Alok Verma,alok.verma@sgtu.edu,TEACHER,+91 98765 12003,Sgtu@Pa
           </button>
         </div>
       )}
+
+      {/* Sub-module Navigation Tabs */}
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-navy-800 pb-2">
+        <button
+          onClick={() => setActiveTab('users')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            activeTab === 'users'
+              ? 'bg-brand-500 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          <span>User Accounts & Credentials</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('audit')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            activeTab === 'audit'
+              ? 'bg-brand-500 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800'
+          }`}
+        >
+          <History className="w-4 h-4" />
+          <span>System Security & Audit Activity Logs</span>
+        </button>
+      </div>
 
       {/* KPI Stats Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -1044,6 +1137,139 @@ EMP-FAC-ME-05,Dr. Alok Verma,alok.verma@sgtu.edu,TEACHER,+91 98765 12003,Sgtu@Pa
           </div>
         </Modal>
       )}
+
+      {/* Audit Logs View when activeTab === 'audit' */}
+      {activeTab === 'audit' && (
+        <div className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-soft space-y-4">
+          <div className="flex items-center justify-between border-b border-slate-100 dark:border-navy-800 pb-3">
+            <div>
+              <h4 className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <History className="w-4 h-4 text-brand-500" />
+                <span>Real-Time Institutional Audit Trail</span>
+              </h4>
+              <p className="text-[11px] text-slate-400 mt-0.5">
+                Cryptographic immutable log of administrative grade adjustments, fee collection actions, and user privilege mutations.
+              </p>
+            </div>
+            <Button variant="outline" size="sm" onClick={fetchAuditLogs} className="text-xs">
+              <RefreshCw className={`w-3.5 h-3.5 mr-1 ${loadingAuditLogs ? 'animate-spin' : ''}`} />
+              Refresh Logs
+            </Button>
+          </div>
+
+          {loadingAuditLogs ? (
+            <div className="py-10 text-center text-xs text-slate-400">Loading audit trail...</div>
+          ) : auditLogs.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-100 dark:border-navy-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <th className="pb-3 px-3">Timestamp</th>
+                    <th className="pb-3 px-3">Action</th>
+                    <th className="pb-3 px-3">Target Resource</th>
+                    <th className="pb-3 px-3">Performed By</th>
+                    <th className="pb-3 px-3">IP Address</th>
+                    <th className="pb-3 px-3">Details / Context</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
+                  {auditLogs.map((log, i) => (
+                    <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-navy-800/50">
+                      <td className="py-3 px-3 font-mono text-[11px] text-slate-500">
+                        {new Date(log.timestamp).toLocaleString()}
+                      </td>
+                      <td className="py-3 px-3 font-bold text-slate-900 dark:text-white">
+                        <span className="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-navy-800 text-[10px] font-mono">
+                          {log.action}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 font-medium text-brand-600 dark:text-brand-400">
+                        {log.resource}
+                      </td>
+                      <td className="py-3 px-3 font-semibold text-slate-800 dark:text-slate-200">
+                        {log.userEmail || 'System Admin'}
+                      </td>
+                      <td className="py-3 px-3 font-mono text-slate-400 text-[11px]">
+                        {log.ipAddress || '127.0.0.1'}
+                      </td>
+                      <td className="py-3 px-3 text-slate-600 dark:text-slate-300">
+                        {log.details}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="py-8 text-center text-xs text-slate-400">No security audit logs recorded yet.</div>
+          )}
+        </div>
+      )}
+
+      {/* Batch Promotion Modal */}
+      <Modal
+        isOpen={isPromoteModalOpen}
+        onClose={() => setIsPromoteModalOpen(false)}
+        title="Semester Rollover & Batch Promotion Wizard"
+        subtitle="Promote an entire cohort of students to their next academic semester."
+      >
+        <form onSubmit={handleBatchPromote} className="space-y-4 text-xs">
+          <div className="p-3.5 rounded-xl bg-brand-50 dark:bg-brand-950/40 border border-brand-200 dark:border-brand-800 text-brand-800 dark:text-brand-200">
+            <p className="font-bold flex items-center gap-1.5">
+              <TrendingUp className="w-4 h-4 text-brand-600" />
+              <span>Automated Cohort Rollover</span>
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed">
+              This action updates the enrolled semester across all active student profiles in the selected cohort, archives previous examination records, and prepares new course registrations.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                Source Semester (Current) *
+              </label>
+              <select
+                value={promoteForm.fromSemester}
+                onChange={(e) => setPromoteForm({ ...promoteForm, fromSemester: Number(e.target.value) })}
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-xl font-bold"
+              >
+                {[1, 2, 3, 4, 5, 6, 7].map((sem) => (
+                  <option key={sem} value={sem}>
+                    Semester {sem}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                Target Semester (Promote To) *
+              </label>
+              <select
+                value={promoteForm.toSemester}
+                onChange={(e) => setPromoteForm({ ...promoteForm, toSemester: Number(e.target.value) })}
+                className="w-full px-3 py-2 bg-slate-50 dark:bg-navy-950 border border-slate-200 dark:border-navy-800 rounded-xl font-bold text-brand-600"
+              >
+                {[2, 3, 4, 5, 6, 7, 8].map((sem) => (
+                  <option key={sem} value={sem}>
+                    Semester {sem} (Advanced)
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-navy-800">
+            <Button variant="secondary" type="button" onClick={() => setIsPromoteModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit" isLoading={actionLoading} icon={TrendingUp}>
+              Execute Batch Promotion
+            </Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 };

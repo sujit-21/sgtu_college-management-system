@@ -37,7 +37,7 @@ export const LibraryPage = () => {
   const isStudent = user?.role === 'STUDENT';
 
   // Active Tab
-  const [activeTab, setActiveTab] = useState('catalogue'); // 'catalogue' | 'circulations' | 'my-books'
+  const [activeTab, setActiveTab] = useState('catalogue'); // 'catalogue' | 'circulations' | 'my-books' | 'reservations'
 
   // Catalogue State
   const [books, setBooks] = useState([]);
@@ -45,6 +45,10 @@ export const LibraryPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [loadingBooks, setLoadingBooks] = useState(true);
+
+  // Reservations Queue State
+  const [reservations, setReservations] = useState([]);
+  const [loadingReservations, setLoadingReservations] = useState(false);
 
   // Stats State
   const [stats, setStats] = useState(null);
@@ -124,6 +128,36 @@ export const LibraryPage = () => {
     }
   };
 
+  const loadReservations = async () => {
+    setLoadingReservations(true);
+    try {
+      const res = await api.get('/library/reservations');
+      if (res.data.success) {
+        setReservations(res.data.data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingReservations(false);
+    }
+  };
+
+  const handleReserveBook = async (bookId) => {
+    setActionLoading(true);
+    try {
+      const res = await api.post('/library/reserve', { bookId });
+      if (res.data.success) {
+        setSuccessBanner(res.data.message);
+        loadReservations();
+        loadBooks();
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to reserve book.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const loadIssues = async () => {
     setLoadingIssues(true);
     try {
@@ -169,6 +203,8 @@ export const LibraryPage = () => {
   useEffect(() => {
     if (activeTab === 'circulations' || activeTab === 'my-books') {
       loadIssues();
+    } else if (activeTab === 'reservations') {
+      loadReservations();
     }
   }, [activeTab, issueStatusFilter]);
 
@@ -376,6 +412,18 @@ export const LibraryPage = () => {
             <span>My Borrowed Books</span>
           </button>
         )}
+
+        <button
+          onClick={() => setActiveTab('reservations')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            activeTab === 'reservations'
+              ? 'bg-brand-500 text-white shadow-sm'
+              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-navy-800'
+          }`}
+        >
+          <Clock className="w-4 h-4" />
+          <span>Hold & Reservation Queue</span>
+        </button>
       </div>
 
       {/* VIEW 1: BOOK CATALOGUE */}
@@ -509,9 +557,21 @@ export const LibraryPage = () => {
                         </Button>
                       ) : (
                         <div className="text-center py-1">
-                          <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-                            {isAvailable ? 'Available for borrowing at Library Desk' : 'Currently in circulation'}
-                          </span>
+                          {isAvailable ? (
+                            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+                              Available for borrowing at Library Desk
+                            </span>
+                          ) : (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleReserveBook(book._id)}
+                              className="w-full text-xs font-bold"
+                              icon={Clock}
+                            >
+                              Reserve Copy (Waitlist)
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -676,6 +736,73 @@ export const LibraryPage = () => {
                 </tbody>
               </table>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* VIEW 3: RESERVATIONS QUEUE */}
+      {activeTab === 'reservations' && (
+        <div className="space-y-6">
+          <div className="p-5 rounded-2xl bg-white dark:bg-navy-900 border border-slate-200 dark:border-navy-800 shadow-soft">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Active Book Hold & Reservation Waitlist</h3>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  Automated FIFO allocation: students are notified sequentially when checked-out volumes are returned.
+                </p>
+              </div>
+            </div>
+
+            {loadingReservations ? (
+              <div className="py-8 text-center text-slate-400 text-xs">Loading reservation waitlist...</div>
+            ) : reservations.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-slate-100 dark:border-navy-800 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      <th className="pb-3 px-3">Position</th>
+                      <th className="pb-3 px-3">Book Title</th>
+                      <th className="pb-3 px-3">ISBN</th>
+                      <th className="pb-3 px-3">Student Name</th>
+                      <th className="pb-3 px-3">Reg Number</th>
+                      <th className="pb-3 px-3">Reserved On</th>
+                      <th className="pb-3 px-3 text-right">Queue Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-navy-800">
+                    {reservations.map((r, i) => (
+                      <tr key={r._id} className="hover:bg-slate-50/50 dark:hover:bg-navy-800/50">
+                        <td className="py-3 px-3 font-mono font-bold text-brand-600 dark:text-brand-400">
+                          #{r.queuePosition || i + 1}
+                        </td>
+                        <td className="py-3 px-3 font-semibold text-slate-900 dark:text-white">
+                          {r.bookId?.title || 'Library Title'}
+                        </td>
+                        <td className="py-3 px-3 font-mono text-slate-500">{r.bookId?.isbn || 'N/A'}</td>
+                        <td className="py-3 px-3 text-slate-800 dark:text-slate-200">
+                          {r.studentId?.fullName || 'Student'}
+                        </td>
+                        <td className="py-3 px-3 font-mono text-slate-500">
+                          {r.studentId?.registrationNumber || 'N/A'}
+                        </td>
+                        <td className="py-3 px-3 text-slate-500">
+                          {new Date(r.reservedDate).toLocaleDateString()}
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300">
+                            {r.status}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="py-10 text-center text-slate-400 text-xs">
+                No active reservations in the queue. All circulating volumes are currently available or unreserved.
+              </div>
+            )}
           </div>
         </div>
       )}
