@@ -14,6 +14,12 @@ const userSchema = new Schema(
       default: 'STUDENT',
     },
     isActive: { type: Boolean, default: true },
+    avatar: { type: String, default: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150' },
+    photoFormat: {
+      type: String,
+      enum: ['PASSPORT_SIZE', 'STAMP_SIZE'],
+      default: 'PASSPORT_SIZE',
+    },
   },
   { timestamps: true }
 );
@@ -84,6 +90,11 @@ const studentProfileSchema = new Schema(
       default: 'ACTIVE',
     },
     avatar: { type: String },
+    photoFormat: {
+      type: String,
+      enum: ['PASSPORT_SIZE', 'STAMP_SIZE'],
+      default: 'PASSPORT_SIZE',
+    },
     departmentId: { type: Schema.Types.ObjectId, ref: 'Department', required: true },
     courseId: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
 
@@ -120,8 +131,12 @@ const teacherProfileSchema = new Schema(
     designation: { type: String, default: 'Assistant Professor' },
     qualification: { type: String, default: 'M.Tech / Ph.D' },
     specialization: { type: String },
-    joiningDate: { type: String },
     avatar: { type: String },
+    photoFormat: {
+      type: String,
+      enum: ['PASSPORT_SIZE', 'STAMP_SIZE'],
+      default: 'PASSPORT_SIZE',
+    },
     departmentId: { type: Schema.Types.ObjectId, ref: 'Department', required: true },
 
     // Bank & Payroll Details

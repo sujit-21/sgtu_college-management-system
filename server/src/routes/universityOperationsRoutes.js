@@ -10,6 +10,8 @@ import {
   TeacherProfile,
   StudentProfile,
   QuestionPaper,
+  User,
+  Department,
 } from '../models/index.js';
 import { authenticate, authorize } from '../middleware/auth.js';
 
@@ -449,6 +451,203 @@ router.delete('/question-papers/:id', authorize('ADMIN', 'SUPER_ADMIN'), async (
   try {
     await QuestionPaper.findByIdAndDelete(req.params.id);
     res.json({ success: true, message: 'Question paper removed from repository.' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// ==========================================
+// 10. IDENTITY CARDS PHOTO & CREDENTIALS
+// ==========================================
+router.get('/id-cards/members', async (req, res, next) => {
+  try {
+    const { category = 'STUDENTS' } = req.query; // 'STUDENTS', 'HODS', 'FACULTY', 'LIBRARIANS', 'ACCOUNTANTS'
+
+    if (category === 'STUDENTS') {
+      const students = await StudentProfile.find({ academicStatus: 'ACTIVE' })
+        .populate('userId', 'email collegeId avatar photoFormat')
+        .populate('departmentId', 'name code')
+        .populate('courseId', 'name code')
+        .sort({ createdAt: -1 });
+
+      const mapped = students.map((s) => ({
+        _id: s._id,
+        userId: s.userId?._id,
+        fullName: s.fullName,
+        collegeId: s.registrationNumber,
+        email: s.userId?.email,
+        phone: s.phone,
+        role: 'STUDENT',
+        categoryTitle: 'Student Identity Card',
+        departmentName: s.departmentId?.name || 'School of Computing',
+        departmentCode: s.departmentId?.code || 'CSE',
+        courseName: s.courseId?.name || 'Bachelor of Technology',
+        semester: s.currentSemester,
+        bloodGroup: s.bloodGroup || 'O+',
+        aadhaarNumber: s.aadhaarNumber,
+        validThru: 'JULY 2027',
+        avatar: s.avatar || s.userId?.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+        photoFormat: s.photoFormat || s.userId?.photoFormat || 'PASSPORT_SIZE',
+      }));
+      return res.json({ success: true, count: mapped.length, data: mapped });
+    }
+
+    if (category === 'HODS') {
+      const hodUsers = await User.find({ role: 'HOD' });
+      const hodUserIds = hodUsers.map((u) => u._id);
+      const hodProfiles = await TeacherProfile.find({ userId: { $in: hodUserIds } })
+        .populate('userId', 'email collegeId avatar photoFormat')
+        .populate('departmentId', 'name code');
+
+      const mapped = hodProfiles.map((h) => ({
+        _id: h._id,
+        userId: h.userId?._id,
+        fullName: h.fullName,
+        collegeId: h.employeeId,
+        email: h.userId?.email,
+        phone: h.phone,
+        role: 'HOD',
+        categoryTitle: 'Head of Department Identity Card',
+        designation: h.designation || 'Professor & Head of Department',
+        departmentName: h.departmentId?.name || 'Computer Science & Engineering',
+        departmentCode: h.departmentId?.code || 'CSE',
+        qualification: h.qualification || 'Ph.D in Distributed Systems',
+        specialization: h.specialization,
+        validThru: 'DEC 2028',
+        avatar: h.avatar || h.userId?.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+        photoFormat: h.photoFormat || h.userId?.photoFormat || 'PASSPORT_SIZE',
+      }));
+      return res.json({ success: true, count: mapped.length, data: mapped });
+    }
+
+    if (category === 'FACULTY') {
+      const teacherUsers = await User.find({ role: 'TEACHER' });
+      const teacherUserIds = teacherUsers.map((u) => u._id);
+      const facultyProfiles = await TeacherProfile.find({ userId: { $in: teacherUserIds } })
+        .populate('userId', 'email collegeId avatar photoFormat')
+        .populate('departmentId', 'name code');
+
+      const mapped = facultyProfiles.map((f) => ({
+        _id: f._id,
+        userId: f.userId?._id,
+        fullName: f.fullName,
+        collegeId: f.employeeId,
+        email: f.userId?.email,
+        phone: f.phone,
+        role: 'TEACHER',
+        categoryTitle: 'Faculty Identity Card',
+        designation: f.designation || 'Associate Professor',
+        departmentName: f.departmentId?.name || 'School of Engineering',
+        departmentCode: f.departmentId?.code || 'CSE',
+        qualification: f.qualification || 'M.Tech / Ph.D',
+        specialization: f.specialization,
+        validThru: 'DEC 2028',
+        avatar: f.avatar || f.userId?.avatar || 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
+        photoFormat: f.photoFormat || f.userId?.photoFormat || 'PASSPORT_SIZE',
+      }));
+      return res.json({ success: true, count: mapped.length, data: mapped });
+    }
+
+    if (category === 'LIBRARIANS') {
+      const librarianUsers = await User.find({ role: 'LIBRARIAN' });
+      const mapped = librarianUsers.map((l) => ({
+        _id: l._id,
+        userId: l._id,
+        fullName: 'Chief University Librarian',
+        collegeId: l.collegeId || 'LIB-001',
+        email: l.email,
+        phone: '+91 98450 11990',
+        role: 'LIBRARIAN',
+        categoryTitle: 'Central Library Staff Card',
+        designation: 'Chief Librarian & Information Officer',
+        departmentName: 'Central Library & Knowledge Resource Center',
+        departmentCode: 'LIB',
+        qualification: 'Master of Library & Information Science (M.Lib.I.Sc)',
+        validThru: 'DEC 2028',
+        avatar: l.avatar || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+        photoFormat: l.photoFormat || 'PASSPORT_SIZE',
+      }));
+      return res.json({ success: true, count: mapped.length, data: mapped });
+    }
+
+    if (category === 'ACCOUNTANTS') {
+      const accountantUsers = await User.find({ role: 'ACCOUNTANT' });
+      const mapped = accountantUsers.map((a) => ({
+        _id: a._id,
+        userId: a._id,
+        fullName: 'Chief Accounts Officer',
+        collegeId: a.collegeId || 'ACC-001',
+        email: a.email,
+        phone: '+91 98450 11880',
+        role: 'ACCOUNTANT',
+        categoryTitle: 'Finance & Accounts Bureau Card',
+        designation: 'Finance & Accounts Comptroller',
+        departmentName: 'Finance, Treasury & Audit Bureau',
+        departmentCode: 'FIN',
+        qualification: 'Chartered Accountant (CA) & MBA Finance',
+        validThru: 'DEC 2028',
+        avatar: a.avatar || 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+        photoFormat: a.photoFormat || 'PASSPORT_SIZE',
+      }));
+      return res.json({ success: true, count: mapped.length, data: mapped });
+    }
+
+    res.status(400).json({ success: false, message: 'Invalid ID card category.' });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch('/id-cards/photo/:id', authorize('ADMIN', 'SUPER_ADMIN'), async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { avatar, photoFormat } = req.body; // photoFormat: 'PASSPORT_SIZE' or 'STAMP_SIZE'
+
+    if (photoFormat && !['PASSPORT_SIZE', 'STAMP_SIZE'].includes(photoFormat)) {
+      return res.status(400).json({ success: false, message: 'photoFormat must be PASSPORT_SIZE or STAMP_SIZE' });
+    }
+
+    // Try finding User by id or by profileId
+    let user = await User.findById(id);
+    let sProf = null;
+    let tProf = null;
+
+    if (!user) {
+      sProf = await StudentProfile.findById(id);
+      if (sProf) user = await User.findById(sProf.userId);
+    }
+    if (!user) {
+      tProf = await TeacherProfile.findById(id);
+      if (tProf) user = await User.findById(tProf.userId);
+    }
+
+    if (user) {
+      if (avatar) user.avatar = avatar;
+      if (photoFormat) user.photoFormat = photoFormat;
+      await user.save();
+    }
+
+    // Update profile if student or teacher
+    if (!sProf && user) sProf = await StudentProfile.findOne({ userId: user._id });
+    if (sProf) {
+      if (avatar) sProf.avatar = avatar;
+      if (photoFormat) sProf.photoFormat = photoFormat;
+      await sProf.save();
+    }
+
+    if (!tProf && user) tProf = await TeacherProfile.findOne({ userId: user._id });
+    if (tProf) {
+      if (avatar) tProf.avatar = avatar;
+      if (photoFormat) tProf.photoFormat = photoFormat;
+      await tProf.save();
+    }
+
+    res.json({
+      success: true,
+      message: `ID Card photo updated to ${photoFormat || 'PASSPORT_SIZE'} format successfully.`,
+      avatar: avatar || user?.avatar,
+      photoFormat: photoFormat || user?.photoFormat,
+    });
   } catch (error) {
     next(error);
   }
