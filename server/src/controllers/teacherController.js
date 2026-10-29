@@ -81,6 +81,15 @@ export const createTeacher = async (req, res, next) => {
       specialization,
       joiningDate = new Date().toISOString().split('T')[0],
       password = 'Teacher@123',
+      bankName,
+      accountNumber,
+      accountHolderName,
+      ifscCode,
+      branchName,
+      panNumber,
+      aadhaarNumber,
+      pfUanNumber,
+      experienceYears = 5,
     } = req.body;
 
     if (!fullName || !email || !employeeId || !phone || !departmentId) {
@@ -118,6 +127,15 @@ export const createTeacher = async (req, res, next) => {
       qualification,
       specialization,
       joiningDate,
+      bankName,
+      accountNumber,
+      accountHolderName: accountHolderName || fullName,
+      ifscCode,
+      branchName,
+      panNumber,
+      aadhaarNumber,
+      pfUanNumber,
+      experienceYears: Number(experienceYears) || 0,
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
     });
 
@@ -151,9 +169,32 @@ export const updateTeacher = async (req, res, next) => {
       return res.status(404).json({ success: false, message: 'Teacher record not found.' });
     }
 
-    const allowed = ['fullName', 'phone', 'designation', 'qualification', 'specialization', 'departmentId', 'avatar'];
+    const allowed = [
+      'fullName',
+      'phone',
+      'designation',
+      'qualification',
+      'specialization',
+      'departmentId',
+      'avatar',
+      'bankName',
+      'accountNumber',
+      'accountHolderName',
+      'ifscCode',
+      'branchName',
+      'panNumber',
+      'aadhaarNumber',
+      'pfUanNumber',
+      'experienceYears',
+    ];
     allowed.forEach((f) => {
-      if (req.body[f] !== undefined) teacher[f] = req.body[f];
+      if (req.body[f] !== undefined) {
+        if (f === 'experienceYears') {
+          teacher[f] = req.body[f] === '' ? 0 : Number(req.body[f]);
+        } else {
+          teacher[f] = req.body[f];
+        }
+      }
     });
 
     await teacher.save();

@@ -97,6 +97,18 @@ export const createStudent = async (req, res, next) => {
       address,
       bloodGroup,
       password = 'Student@123',
+      aadhaarNumber,
+      caste = 'General',
+      fatherName,
+      motherName,
+      emergencyContact,
+      tenthMarks,
+      tenthBoard = 'CBSE',
+      tenthPassingYear = 2020,
+      twelfthMarks,
+      twelfthBoard = 'CBSE',
+      twelfthPassingYear = 2022,
+      twelfthStream = 'Science (PCM)',
     } = req.body;
 
     if (!fullName || !email || !registrationNumber || !phone || !departmentId || !courseId) {
@@ -138,6 +150,18 @@ export const createStudent = async (req, res, next) => {
       admissionYear: Number(admissionYear),
       departmentId,
       courseId,
+      aadhaarNumber,
+      caste,
+      fatherName,
+      motherName,
+      emergencyContact,
+      tenthMarks: tenthMarks !== undefined && tenthMarks !== '' ? Number(tenthMarks) : undefined,
+      tenthBoard,
+      tenthPassingYear: tenthPassingYear ? Number(tenthPassingYear) : 2020,
+      twelfthMarks: twelfthMarks !== undefined && twelfthMarks !== '' ? Number(twelfthMarks) : undefined,
+      twelfthBoard,
+      twelfthPassingYear: twelfthPassingYear ? Number(twelfthPassingYear) : 2022,
+      twelfthStream,
       avatar: `https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150`,
     });
 
@@ -184,11 +208,29 @@ export const updateStudent = async (req, res, next) => {
       'departmentId',
       'courseId',
       'avatar',
+      'aadhaarNumber',
+      'caste',
+      'fatherName',
+      'motherName',
+      'emergencyContact',
+      'tenthMarks',
+      'tenthBoard',
+      'tenthPassingYear',
+      'twelfthMarks',
+      'twelfthBoard',
+      'twelfthPassingYear',
+      'twelfthStream',
     ];
 
     allowedUpdates.forEach((field) => {
       if (req.body[field] !== undefined) {
-        student[field] = req.body[field];
+        if (field === 'tenthMarks' || field === 'twelfthMarks') {
+          student[field] = req.body[field] === '' ? undefined : Number(req.body[field]);
+        } else if (field === 'tenthPassingYear' || field === 'twelfthPassingYear' || field === 'currentSemester') {
+          student[field] = req.body[field] === '' ? undefined : Number(req.body[field]);
+        } else {
+          student[field] = req.body[field];
+        }
       }
     });
 
@@ -255,11 +297,11 @@ export const exportStudents = async (req, res, next) => {
       .populate('departmentId', 'code')
       .populate('courseId', 'code');
 
-    const headers = 'Registration No,Full Name,Email,Phone,Department,Course,Semester,Status\n';
+    const headers = 'Registration No,Full Name,Email,Phone,Department,Course,Semester,Caste,Aadhaar No,10th Marks (%),12th Marks (%),Status\n';
     const rows = students
       .map(
         (s) =>
-          `"${s.registrationNumber}","${s.fullName}","${s.userId?.email || ''}","${s.phone}","${s.departmentId?.code || ''}","${s.courseId?.code || ''}","${s.currentSemester}","${s.academicStatus}"`
+          `"${s.registrationNumber}","${s.fullName}","${s.userId?.email || ''}","${s.phone}","${s.departmentId?.code || ''}","${s.courseId?.code || ''}","${s.currentSemester}","${s.caste || 'General'}","${s.aadhaarNumber || 'N/A'}","${s.tenthMarks ?? 'N/A'}","${s.twelfthMarks ?? 'N/A'}","${s.academicStatus}"`
       )
       .join('\n');
 

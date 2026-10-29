@@ -86,6 +86,24 @@ const studentProfileSchema = new Schema(
     avatar: { type: String },
     departmentId: { type: Schema.Types.ObjectId, ref: 'Department', required: true },
     courseId: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
+
+    // Identity, Category & Family
+    aadhaarNumber: { type: String, trim: true },
+    caste: { type: String, enum: ['General', 'OBC', 'SC', 'ST', 'EWS'], default: 'General' },
+    fatherName: { type: String, trim: true },
+    motherName: { type: String, trim: true },
+    emergencyContact: { type: String, trim: true },
+
+    // 10th Secondary Record
+    tenthMarks: { type: Number },
+    tenthBoard: { type: String, default: 'CBSE' },
+    tenthPassingYear: { type: Number, default: 2020 },
+
+    // 12th Senior Secondary Record
+    twelfthMarks: { type: Number },
+    twelfthBoard: { type: String, default: 'CBSE' },
+    twelfthPassingYear: { type: Number, default: 2022 },
+    twelfthStream: { type: String, default: 'Science (PCM)' },
   },
   { timestamps: true }
 );
@@ -105,6 +123,19 @@ const teacherProfileSchema = new Schema(
     joiningDate: { type: String },
     avatar: { type: String },
     departmentId: { type: Schema.Types.ObjectId, ref: 'Department', required: true },
+
+    // Bank & Payroll Details
+    bankName: { type: String, trim: true },
+    accountNumber: { type: String, trim: true },
+    accountHolderName: { type: String, trim: true },
+    ifscCode: { type: String, trim: true, uppercase: true },
+    branchName: { type: String, trim: true },
+
+    // Statutory IDs & Experience
+    panNumber: { type: String, trim: true, uppercase: true },
+    aadhaarNumber: { type: String, trim: true },
+    pfUanNumber: { type: String, trim: true },
+    experienceYears: { type: Number, default: 5 },
   },
   { timestamps: true }
 );

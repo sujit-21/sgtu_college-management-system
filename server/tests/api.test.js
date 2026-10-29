@@ -155,6 +155,7 @@ test('College Management System - API Verification Suite', async (t) => {
   });
 
   await t.test('Admin can add new book to library catalogue', async () => {
+    const testIsbn = `978-0521-${Date.now().toString().slice(-6)}`;
     const res = await fetch(`${BASE_URL}/library/books`, {
       method: 'POST',
       headers: {
@@ -163,7 +164,7 @@ test('College Management System - API Verification Suite', async (t) => {
       },
       body: JSON.stringify({
         title: 'Quantum Computing and Information',
-        isbn: '978-0521635035',
+        isbn: testIsbn,
         author: 'Michael A. Nielsen, Isaac L. Chuang',
         category: 'Quantum Tech',
         publisher: 'Cambridge University Press',

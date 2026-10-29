@@ -163,6 +163,15 @@ async function seed() {
     specialization: 'Cloud Computing, Distributed Architecture',
     joiningDate: '2016-07-15',
     departmentId: cseDept._id,
+    bankName: 'HDFC Bank',
+    accountNumber: '50100492817264',
+    accountHolderName: 'Prof. Rajesh Sharma',
+    ifscCode: 'HDFC0001234',
+    branchName: 'University Campus Branch',
+    panNumber: 'AAAPR1234K',
+    aadhaarNumber: '8923 4561 2890',
+    pfUanNumber: '100982348172',
+    experienceYears: 14,
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
   });
 
@@ -183,6 +192,15 @@ async function seed() {
     specialization: 'Deep Learning, NLP, Smart Generation AI',
     joiningDate: '2019-01-10',
     departmentId: cseDept._id,
+    bankName: 'State Bank of India',
+    accountNumber: '30948271649',
+    accountHolderName: 'Dr. Neha Patel',
+    ifscCode: 'SBIN0005678',
+    branchName: 'Electronic City Tech Hub',
+    panNumber: 'BBBPK5678L',
+    aadhaarNumber: '7812 3456 9012',
+    pfUanNumber: '100982349921',
+    experienceYears: 9,
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
   });
 
@@ -203,6 +221,15 @@ async function seed() {
     specialization: 'Data Structures, Graph Theory',
     joiningDate: '2021-08-01',
     departmentId: cseDept._id,
+    bankName: 'ICICI Bank',
+    accountNumber: '001205018392',
+    accountHolderName: 'Prof. Amit Verma',
+    ifscCode: 'ICIC0000012',
+    branchName: 'MG Road Branch',
+    panNumber: 'CCCPA9012M',
+    aadhaarNumber: '6701 2345 8901',
+    pfUanNumber: '100982351234',
+    experienceYears: 5,
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
   });
 
@@ -270,6 +297,18 @@ async function seed() {
     departmentId: cseDept._id,
     courseId: btechCse._id,
     avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=150',
+    aadhaarNumber: '7823-9012-3456',
+    caste: 'General',
+    fatherName: 'Ramesh Kumar',
+    motherName: 'Sunita Kumar',
+    emergencyContact: '+91 98450 11223',
+    tenthMarks: 94.6,
+    tenthBoard: 'CBSE',
+    tenthPassingYear: 2020,
+    twelfthMarks: 92.4,
+    twelfthBoard: 'CBSE',
+    twelfthPassingYear: 2022,
+    twelfthStream: 'Science (PCM)',
   });
 
   const studentUser2 = await User.create({
@@ -294,6 +333,18 @@ async function seed() {
     departmentId: cseDept._id,
     courseId: btechCse._id,
     avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
+    aadhaarNumber: '8934-1123-7890',
+    caste: 'OBC',
+    fatherName: 'Deepak Sharma',
+    motherName: 'Anjali Sharma',
+    emergencyContact: '+91 98450 44556',
+    tenthMarks: 96.2,
+    tenthBoard: 'ICSE',
+    tenthPassingYear: 2020,
+    twelfthMarks: 95.8,
+    twelfthBoard: 'CBSE',
+    twelfthPassingYear: 2022,
+    twelfthStream: 'Science (PCMB)',
   });
 
   const studentUser3 = await User.create({
@@ -318,6 +369,18 @@ async function seed() {
     departmentId: cseDept._id,
     courseId: btechCse._id,
     avatar: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=150',
+    aadhaarNumber: '6712-4589-2341',
+    caste: 'SC',
+    fatherName: 'Sanjay Singh',
+    motherName: 'Geeta Singh',
+    emergencyContact: '+91 98450 77889',
+    tenthMarks: 88.5,
+    tenthBoard: 'State Board',
+    tenthPassingYear: 2021,
+    twelfthMarks: 89.2,
+    twelfthBoard: 'CBSE',
+    twelfthPassingYear: 2023,
+    twelfthStream: 'Science (PCM)',
   });
 
   const studentUser4 = await User.create({
@@ -342,6 +405,18 @@ async function seed() {
     departmentId: eceDept._id,
     courseId: btechEce._id,
     avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150',
+    aadhaarNumber: '9234-8871-6543',
+    caste: 'EWS',
+    fatherName: 'Venkatesh Reddy',
+    motherName: 'Lakshmi Reddy',
+    emergencyContact: '+91 98450 99001',
+    tenthMarks: 91.0,
+    tenthBoard: 'CBSE',
+    tenthPassingYear: 2021,
+    twelfthMarks: 93.5,
+    twelfthBoard: 'CBSE',
+    twelfthPassingYear: 2023,
+    twelfthStream: 'Science (PCM)',
   });
 
   console.log('✅ Students created');
